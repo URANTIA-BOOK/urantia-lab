@@ -1,0 +1,39 @@
+services:
+  api:
+    image: oven/bun:1.2
+    working_dir: /app
+    restart: unless-stopped
+    command: ["sh", "-c", "bun install && bun run dev"]
+    env_file:
+      - ${SHARED_ENV_FILE:-../../.env.shared}
+    environment:
+      DATABASE_URL: ${PAPERS_DATABASE_URL}
+      BOOK_TREE: /book/eng
+      PORT: "3000"
+    volumes:
+      - ${API_ROOT}:/app
+      - ${PIPELINE_ROOT}/source:/book/eng:ro
+      - ${PIPELINE_ROOT}/langs:/book/langs:ro
+      - api_node_modules:/app/node_modules
+      - api_bun_cache:/root/.bun
+    networks:
+      - apps
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "bun -e \"fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  api_node_modules: {}
+  api_bun_cache: {}
+
+networks:
+  apps:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true
+  backend:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-backend
+    external: true
