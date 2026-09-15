@@ -3,7 +3,7 @@ services:
     image: node:22-bookworm
     working_dir: /app
     restart: unless-stopped
-    command: ["sh", "-c", "corepack enable && yarn install --frozen-lockfile && npx prisma generate && npx prisma migrate deploy && yarn build && yarn start"]
+    command: ["sh", "-c", "corepack enable && yarn install --frozen-lockfile --production=false && npx prisma generate && npx prisma migrate deploy && yarn build && yarn start"]
     env_file:
       - ${SHARED_ENV_FILE:-../../.env.shared}
     environment:
