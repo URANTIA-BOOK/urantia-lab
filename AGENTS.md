@@ -34,6 +34,9 @@
 - `make verify` is the machine probe. `make review` is the human language
   gate. Do not claim languages verified until the operator has read paper 1
   in English and `?lang=es`.
+- Cloud Agent Compose bind mounts need `uklok-agent docker-local` (org
+  skill `docker-local`) before `make up`. The hosted `tcp://127.0.0.1:2375`
+  engine cannot see this checkout. Edge contract: `.agents/skills/edge-proxy/SKILL.md`.
 
 ## Validation
 

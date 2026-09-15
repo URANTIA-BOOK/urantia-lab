@@ -33,6 +33,10 @@ still calls `http://api:3000` on the Compose network.
 
 Overwrite doors: `make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud HTTP_PORT=8080`.
 
+On a Cursor Cloud Agent, run `uklok-agent docker-local` (from environment
+`start`, after `boot`) before `make up`. The hosted Docker engine cannot
+bind-mount this checkout.
+
 ## Refresh book text without restarting the hub
 
 The hub reads the API, not the pipeline files. Trees are bind-mounted into the
