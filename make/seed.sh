@@ -21,7 +21,6 @@ compose_api() {
       --env-file "$REPOSITORY_ROOT/stack/api/.env" \
       --env-file "$SHARED_ENV_FILE" \
       -f "$REPOSITORY_ROOT/stack/api/docker-compose.yml" \
-      -f "$REPOSITORY_ROOT/stack/api/docker-compose.dev.yml" \
       "$@"
 }
 

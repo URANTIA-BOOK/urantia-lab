@@ -1,7 +1,7 @@
 include $(dir $(lastword $(MAKEFILE_LIST)))project.mk
 
 DOCKER_COMPOSE ?= docker compose
-MODE ?= dev
+MODE ?= prod
 
 STACK_NAME ?= unnamed
 ENV_FILE ?= .env

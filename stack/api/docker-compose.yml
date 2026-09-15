@@ -3,10 +3,11 @@ services:
     image: oven/bun:1.2
     working_dir: /app
     restart: unless-stopped
-    command: ["sh", "-c", "bun install && bun run dev"]
+    command: ["sh", "-c", "bun install && bun run start"]
     env_file:
       - ${SHARED_ENV_FILE:-../../.env.shared}
     environment:
+      NODE_ENV: production
       DATABASE_URL: ${PAPERS_DATABASE_URL}
       BOOK_TREE: /book/eng
       PORT: "3000"

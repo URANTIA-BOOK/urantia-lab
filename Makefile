@@ -1,7 +1,7 @@
 include make/project.mk
 
 DOCKER_COMPOSE ?= docker compose
-MODE ?= dev
+MODE ?= prod
 
 POSTGRES_DIR := stack/db/postgres
 REDIS_DIR := stack/redis
@@ -23,6 +23,7 @@ DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up edge-up
 DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 
 .PHONY: help check-docker check-siblings init env-check network validate \
+	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
 	edge-up edge-down
@@ -31,11 +32,13 @@ help:
 	@echo "Urantia lab — local conductor for the reading platform"
 	@echo ""
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
-	@echo "This lab's default is MODE=dev: diagnostic ports, sibling checkouts."
+	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
+	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
 	@echo ""
 	@echo "  make init               Name this copy and generate local secrets"
-	@echo "  make validate           Validate Compose models"
-	@echo "  make up                 Postgres + Redis + API + hub + edge"
+	@echo "  make validate           Validate the selected Compose model"
+	@echo "  make validate-dev       Validate MODE=dev overlays"
+	@echo "  make up                 Postgres + Redis + API + hub + edge (prod)"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
@@ -70,7 +73,6 @@ env-check:
 network: check-docker
 	@$(PROJECT_NAME_ENV) ./make/ensure-networks.sh
 
-validate: MODE=dev
 validate: init network check-siblings
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) validate
 	@$(STACK_MAKE) -C $(REDIS_DIR) validate
@@ -78,7 +80,11 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(HUB_DIR) validate
 	@$(STACK_MAKE) -C $(EDGE_DIR) validate
 	@./make/test-edge-urls.sh
+	@./make/test-prod-mode.sh
 	@echo "$(MODE) stack is valid."
+
+validate-dev:
+	@$(MAKE) validate MODE=dev
 
 up: validate
 	@set -e; for target in $(DEFAULT_UP_TARGETS); do \

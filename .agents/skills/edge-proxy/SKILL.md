@@ -28,7 +28,10 @@ only the lab contract.
    Caddy off that host port without changing the tunnel.
 5. `make verify` probes `127.0.0.1:$CADDY_HTTP_PORT` and the stamped public
    URLs. `make review` is still the human language gate.
-6. `./make/test-edge-urls.sh` covers the stamp helper. Run it from
+6. Close the turn on `MODE=prod` (hub `yarn start`, API `bun run start`).
+   `MODE=dev` is only for in-turn hot reload. See
+   `.cursor/rules/staging-prod-mode.mdc`.
+7. `./make/test-edge-urls.sh` and `./make/test-prod-mode.sh` run from
    `make validate`.
 
 ## Not this

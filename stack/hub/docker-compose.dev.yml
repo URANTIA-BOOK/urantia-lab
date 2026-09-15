@@ -1,4 +1,7 @@
 services:
   hub:
+    command: ["sh", "-c", "corepack enable && yarn install --frozen-lockfile && npx prisma generate && npx prisma migrate deploy && yarn dev"]
+    environment:
+      NODE_ENV: development
     ports:
       - "${HUB_HOST_PORT:-3001}:3001"

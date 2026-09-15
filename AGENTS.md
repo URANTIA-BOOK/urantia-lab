@@ -6,7 +6,10 @@
   the pipeline.
 - Apps are sibling checkouts under `UKLOK_ROOT` (`URANTIA`, `urantia-dev-api`,
   `urantia-hub`). Do not add them as submodules here.
-- Lab default is `MODE=dev`. Do not import Wealth's Hasura, Auth0, or Portainer.
+- Lab default is `MODE=prod` (`next start` / `bun start`, Caddy only).
+  `MODE=dev` is hot-reload plus diagnostic ports. Close every turn on prod
+  so the Cloudflare origin matches staging (`.cursor/rules/staging-prod-mode.mdc`).
+  Do not import Wealth's Hasura, Auth0, or Portainer.
   The narrow exception is a Caddy path-prefix edge (`stack/edge`) so one
   Cloudflare published route (`localhost:8080`) can reach the hub and the API.
   Browser traffic uses `EDGE_PUBLIC_URL`; hub SSR stays on
@@ -18,8 +21,10 @@
 
 ## Operating contract
 
-- The root Makefile is the door: `init`, `validate`, `up`, `seed`,
-  `seed-lang`, `verify`, `review`, `down`, `destroy`.
+- The root Makefile is the door: `init`, `validate`, `validate-dev`, `up`,
+  `seed`, `seed-lang`, `verify`, `review`, `down`, `destroy`.
+- End every turn with `make up` (prod) and `make verify`. Do not leave
+  `yarn dev` or `bun --hot` serving the published origin.
 - `COMPOSE_PROJECT_NAME` in `.env.shared` isolates containers, volumes, and
   the networks `<name>-apps` / `<name>-backend`. The default name is
   `urantialab` so this copy does not share a Compose project with other
