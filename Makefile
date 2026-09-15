@@ -7,6 +7,7 @@ POSTGRES_DIR := stack/db/postgres
 REDIS_DIR := stack/redis
 API_DIR := stack/api
 HUB_DIR := stack/hub
+EDGE_DIR := stack/edge
 
 ifeq ($(PROJECT_NAME_OVERRIDE),1)
 STACK_MAKE := $(MAKE) PROJECT_NAME=$(PROJECT_NAME) MODE=$(MODE)
@@ -18,12 +19,13 @@ PROJECT_NAME_ENV := PROJECT_NAME_OVERRIDE=$(PROJECT_NAME_OVERRIDE) \
 	PROJECT_NAME=$(if $(PROJECT_NAME_OVERRIDE),$(PROJECT_NAME),) \
 	SHARED_ENV_FILE=$(SHARED_ENV_FILE)
 
-DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up
-DEFAULT_DOWN_TARGETS := hub-down api-down redis-down postgres-down
+DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up edge-up
+DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 
 .PHONY: help check-docker check-siblings init env-check network validate \
 	up down restart destroy ps logs verify seed seed-lang review \
-	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down
+	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
+	edge-up edge-down
 
 help:
 	@echo "Urantia lab — local conductor for the reading platform"
@@ -33,10 +35,10 @@ help:
 	@echo ""
 	@echo "  make init               Name this copy and generate local secrets"
 	@echo "  make validate           Validate Compose models"
-	@echo "  make up                 Postgres + Redis + API + hub"
+	@echo "  make up                 Postgres + Redis + API + hub + edge"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
-	@echo "  make verify             Probe API health, languages, and hub"
+	@echo "  make verify             Probe edge, API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
 	@echo "  make destroy CONFIRM=true  Remove containers, volumes, and networks"
@@ -58,6 +60,7 @@ init: check-docker
 	@$(STACK_MAKE) -C $(REDIS_DIR) env
 	@$(STACK_MAKE) -C $(API_DIR) env
 	@$(STACK_MAKE) -C $(HUB_DIR) env
+	@$(STACK_MAKE) -C $(EDGE_DIR) env
 	@echo "Lab environments are ready."
 
 env-check:
@@ -73,6 +76,8 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(REDIS_DIR) validate
 	@$(STACK_MAKE) -C $(API_DIR) validate
 	@$(STACK_MAKE) -C $(HUB_DIR) validate
+	@$(STACK_MAKE) -C $(EDGE_DIR) validate
+	@./make/test-edge-urls.sh
 	@echo "$(MODE) stack is valid."
 
 up: validate
@@ -97,6 +102,7 @@ ps:
 	@$(STACK_MAKE) -C $(REDIS_DIR) ps
 	@$(STACK_MAKE) -C $(API_DIR) ps
 	@$(STACK_MAKE) -C $(HUB_DIR) ps
+	@$(STACK_MAKE) -C $(EDGE_DIR) ps
 
 logs:
 	@test -n "$(STACK)" || { echo "Usage: make logs STACK=api SERVICE=api" >&2; exit 1; }
@@ -118,6 +124,10 @@ hub-up:
 	@$(STACK_MAKE) -C $(HUB_DIR) up
 hub-down:
 	@$(STACK_MAKE) -C $(HUB_DIR) down
+edge-up:
+	@$(STACK_MAKE) -C $(EDGE_DIR) up
+edge-down:
+	@$(STACK_MAKE) -C $(EDGE_DIR) down
 
 seed: env-check check-siblings
 	@./make/seed.sh

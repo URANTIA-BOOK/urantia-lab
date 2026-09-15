@@ -18,6 +18,21 @@ make review
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
 
+Phone / Cloudflare review uses the published edge:
+
+```text
+https://urantia.uklok.cloud
+https://urantia.uklok.cloud/dev-api/health
+```
+
+Caddy listens on `CADDY_HTTP_PORT` (default `8080`) so a dashboard tunnel whose
+origin is `http://localhost:8080` can reach both the hub (`/`) and the papers
+API (`/dev-api`). That prefix avoids the hub's NextAuth `/api` routes. `make
+init` stamps `NEXT_PUBLIC_*` and `NEXTAUTH_URL` from `EDGE_PUBLIC_URL`. Hub SSR
+still calls `http://api:3000` on the Compose network.
+
+Overwrite doors: `make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud HTTP_PORT=8080`.
+
 ## Refresh book text without restarting the hub
 
 The hub reads the API, not the pipeline files. Trees are bind-mounted into the
@@ -38,7 +53,7 @@ lab overlay refresh.
 A second copy:
 
 ```bash
-make init PROJECT_NAME=wt-review POSTGRES_HOST_PORT=5434 REDIS_HOST_PORT=6381 API_HOST_PORT=3010 HUB_HOST_PORT=3011
+make init PROJECT_NAME=wt-review POSTGRES_HOST_PORT=5434 REDIS_HOST_PORT=6381 API_HOST_PORT=3010 HUB_HOST_PORT=3011 HTTP_PORT=8081
 ```
 
 Stop or remove this copy:

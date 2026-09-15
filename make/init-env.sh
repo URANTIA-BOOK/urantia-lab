@@ -62,5 +62,26 @@ set_env_value "$SHARED_ENV_FILE" NEXT_PUBLIC_URANTIA_DEV_API_HOST "http://127.0.
 set_env_value "$SHARED_ENV_FILE" NEXT_PUBLIC_HOST "http://127.0.0.1:${hub_port}"
 set_env_value "$SHARED_ENV_FILE" NEXTAUTH_URL "http://127.0.0.1:${hub_port}"
 
+if [[ -n "${HTTP_PORT:-}" ]]; then
+  set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT "$HTTP_PORT"
+elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)" ]]; then
+  set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT \
+    "$(read_env_value "$SHARED_ENV_EXAMPLE" CADDY_HTTP_PORT)"
+fi
+if [[ -n "${CADDY_API_PATH:-}" ]]; then
+  set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH "$CADDY_API_PATH"
+elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)" ]]; then
+  set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH \
+    "$(read_env_value "$SHARED_ENV_EXAMPLE" CADDY_API_PATH)"
+fi
+if [[ -n "${EDGE_PUBLIC_URL:-}" ]]; then
+  set_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL "${EDGE_PUBLIC_URL%/}"
+elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)" ]]; then
+  set_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL \
+    "$(read_env_value "$SHARED_ENV_EXAMPLE" EDGE_PUBLIC_URL)"
+fi
+
+SHARED_ENV_FILE="$SHARED_ENV_FILE" "$SCRIPT_DIR/stamp-edge-urls.sh"
+
 echo "Lab identity: COMPOSE_PROJECT_NAME=$name"
 echo "Review URLs: hub $(read_env_value "$SHARED_ENV_FILE" HUB_PUBLIC_URL)  api $(read_env_value "$SHARED_ENV_FILE" API_PUBLIC_URL)"
