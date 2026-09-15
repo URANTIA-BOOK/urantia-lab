@@ -4,13 +4,13 @@
 
 # Single published origin for the Cloudflare route (host :8080 → :80).
 # The hub already owns /api (NextAuth) and /papers, so the papers API is
-# mounted at CADDY_API_PATH (default /dev-api), matching Wealth's
-# handle_path prefix pattern without Hasura, Auth0, or Portainer.
+# mounted at /dev-api (CADDY_API_PATH). Keep this prefix in sync with
+# stamp-edge-urls.sh. Wealth handle_path pattern, no Hasura/Auth0/Portainer.
 (urantia_edge) {
 	encode zstd gzip
 
-	redir {$CADDY_API_PATH} {$CADDY_API_PATH}/
-	handle_path {$CADDY_API_PATH}* {
+	redir /dev-api /dev-api/
+	handle_path /dev-api* {
 		reverse_proxy api:3000 {
 			header_up X-Forwarded-Proto https
 			header_up X-Forwarded-Host {host}
