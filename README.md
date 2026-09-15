@@ -18,6 +18,23 @@ make review
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
 
+## Refresh book text without restarting the hub
+
+The hub reads the API, not the pipeline files. Trees are bind-mounted into the
+API container. After an edit, re-seed Postgres and refresh the browser.
+
+| What you changed | Command | What updates |
+| --- | --- | --- |
+| English tree (`URANTIA/source`) | `make seed` | papers / paragraphs (upsert) |
+| Spanish / French / German tree | `make seed-lang L=es` | `paragraph_translations` and titles |
+
+Do not restart the hub. `next dev` and `bun --hot` already watch code. Content
+comes from Postgres after seed.
+
+Pipeline markdown still needs `make lang-run` (or a split) before the tree JSON
+companions exist. Editing a companion under `langs/spanish` is enough for a
+lab overlay refresh.
+
 A second copy:
 
 ```bash

@@ -22,7 +22,7 @@ DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up
 DEFAULT_DOWN_TARGETS := hub-down api-down redis-down postgres-down
 
 .PHONY: help check-docker check-siblings init env-check network validate \
-	up down restart destroy ps logs verify seed review \
+	up down restart destroy ps logs verify seed seed-lang review \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down
 
 help:
@@ -35,6 +35,7 @@ help:
 	@echo "  make validate           Validate Compose models"
 	@echo "  make up                 Postgres + Redis + API + hub"
 	@echo "  make seed               English tree + official translation overlays"
+	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
@@ -120,6 +121,10 @@ hub-down:
 
 seed: env-check check-siblings
 	@./make/seed.sh
+
+seed-lang: env-check check-siblings
+	@test -n "$(L)" || { echo "Usage: make seed-lang L=es" >&2; exit 1; }
+	@./make/seed.sh "$(L)"
 
 verify:
 	@./make/verify.sh

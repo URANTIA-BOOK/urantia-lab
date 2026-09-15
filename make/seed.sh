@@ -28,24 +28,36 @@ compose_api() {
 echo "==> migrate papers database"
 compose_api exec -T api bun run db:migrate
 
+overlay_lang() {
+  local api_lang="$1"
+  local tree_name="$2"
+  local tree="$PIPELINE_ROOT/langs/$tree_name"
+  if [[ -f "$tree/metadata.json" ]]; then
+    echo "==> overlay $tree_name companions as lang=$api_lang"
+    compose_api exec -T api bun run seed:tree -- --tree="/book/langs/$tree_name" --lang="$api_lang"
+  fi
+}
+
+ONLY_LANG="${1:-}"
+if [[ -n "$ONLY_LANG" ]]; then
+  case "$ONLY_LANG" in
+    es) overlay_lang es spanish ;;
+    fr) overlay_lang fr french ;;
+    de) overlay_lang de german ;;
+    *)
+      echo "Usage: make seed-lang L=es|fr|de" >&2
+      exit 2
+      ;;
+  esac
+  echo "Seed complete."
+  exit 0
+fi
+
 echo "==> seed English tree"
 compose_api exec -T api bun run seed
 
-spanish="$PIPELINE_ROOT/langs/spanish"
-french="$PIPELINE_ROOT/langs/french"
-german="$PIPELINE_ROOT/langs/german"
-
-if [[ -f "$spanish/metadata.json" ]]; then
-  echo "==> overlay Spanish companions as lang=es"
-  compose_api exec -T api bun run seed:tree -- --tree=/book/langs/spanish --lang=es
-fi
-if [[ -f "$french/metadata.json" ]]; then
-  echo "==> overlay French companions as lang=fr"
-  compose_api exec -T api bun run seed:tree -- --tree=/book/langs/french --lang=fr
-fi
-if [[ -f "$german/metadata.json" ]]; then
-  echo "==> overlay German companions as lang=de"
-  compose_api exec -T api bun run seed:tree -- --tree=/book/langs/german --lang=de
-fi
+overlay_lang es spanish
+overlay_lang fr french
+overlay_lang de german
 
 echo "Seed complete."

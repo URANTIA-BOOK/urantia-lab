@@ -13,8 +13,8 @@
 
 ## Operating contract
 
-- The root Makefile is the door: `init`, `validate`, `up`, `seed`, `verify`,
-  `review`, `down`, `destroy`.
+- The root Makefile is the door: `init`, `validate`, `up`, `seed`,
+  `seed-lang`, `verify`, `review`, `down`, `destroy`.
 - `COMPOSE_PROJECT_NAME` in `.env.shared` isolates containers, volumes, and
   the networks `<name>-apps` / `<name>-backend`. The default name is
   `urantialab` so this copy does not share a Compose project with other
