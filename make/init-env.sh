@@ -34,12 +34,10 @@ ensure_secret "$SHARED_ENV_FILE" POSTGRES_PASSWORD
 ensure_secret "$SHARED_ENV_FILE" REDIS_PASSWORD
 ensure_secret "$SHARED_ENV_FILE" NEXTAUTH_SECRET
 
-UKLOK_ROOT="$(cd "$REPOSITORY_ROOT/.." && pwd)"
-set_env_value "$SHARED_ENV_FILE" UKLOK_ROOT "$UKLOK_ROOT"
-set_env_value "$SHARED_ENV_FILE" PIPELINE_ROOT "$UKLOK_ROOT/URANTIA"
-set_env_value "$SHARED_ENV_FILE" API_ROOT "$UKLOK_ROOT/urantia-dev-api"
-set_env_value "$SHARED_ENV_FILE" HUB_ROOT "$UKLOK_ROOT/urantia-hub"
-set_env_value "$SHARED_ENV_FILE" BOOK_TREE "$UKLOK_ROOT/URANTIA/source"
+set_env_value "$SHARED_ENV_FILE" PIPELINE_ROOT "$REPOSITORY_ROOT/pipeline"
+set_env_value "$SHARED_ENV_FILE" API_ROOT "$REPOSITORY_ROOT/api"
+set_env_value "$SHARED_ENV_FILE" HUB_ROOT "$REPOSITORY_ROOT/hub"
+set_env_value "$SHARED_ENV_FILE" BOOK_TREE "$REPOSITORY_ROOT/pipeline/source"
 
 papers_url="postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@postgres:5432/$(read_env_value "$SHARED_ENV_FILE" POSTGRES_DB)"
 hub_url="postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@postgres:5432/$(read_env_value "$SHARED_ENV_FILE" HUB_DB)"
