@@ -89,6 +89,7 @@ validate: init network check-siblings
 	@./make/test-edge-urls.sh
 	@./make/test-prod-mode.sh
 	@./make/test-submodules.sh
+	@./make/test-init-env.sh
 	@echo "$(MODE) stack is valid."
 
 validate-dev:
