@@ -1,7 +1,7 @@
 include $(dir $(lastword $(MAKEFILE_LIST)))project.mk
 
 DOCKER_COMPOSE ?= docker compose
-MODE ?= dev
+MODE ?= prod
 
 STACK_NAME ?= unnamed
 ENV_FILE ?= .env
@@ -66,6 +66,7 @@ env:
 	@if [ ! -f "$(ENV_FILE)" ]; then cp "$(ENV_EXAMPLE)" "$(ENV_FILE)"; echo "created $(ENV_FILE)"; else echo "exists $(ENV_FILE)"; fi
 	@if [ -f "$(DEV_ENV_EXAMPLE)" ] && [ ! -f "$(DEV_ENV_FILE)" ]; then cp "$(DEV_ENV_EXAMPLE)" "$(DEV_ENV_FILE)"; echo "created $(DEV_ENV_FILE)"; fi
 	@SHARED_ENV_FILE="$(SHARED_ENV_FILE)" "$(REPOSITORY_ROOT)/make/stamp-project-name.sh" "$(ENV_FILE)" "$(DEV_ENV_FILE)"
+	@SHARED_ENV_FILE="$(SHARED_ENV_FILE)" "$(REPOSITORY_ROOT)/make/stamp-edge-urls.sh" "$(ENV_FILE)" "$(DEV_ENV_FILE)"
 
 network:
 	@$(PROJECT_NAME_ENV) "$(REPOSITORY_ROOT)/make/ensure-networks.sh"

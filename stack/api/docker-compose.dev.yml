@@ -1,4 +1,7 @@
 services:
   api:
+    command: ["sh", "-c", "bun install && bun run dev"]
+    environment:
+      NODE_ENV: development
     ports:
       - "${API_HOST_PORT:-3000}:3000"

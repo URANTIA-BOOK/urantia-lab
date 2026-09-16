@@ -9,6 +9,8 @@ source "$SCRIPT_DIR/env-utils.sh"
 
 hub="$(read_env_value "$SHARED_ENV_FILE" HUB_PUBLIC_URL)"
 api="$(read_env_value "$SHARED_ENV_FILE" API_PUBLIC_URL)"
+edge="$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)"
+edge="${edge%/}"
 
 cat <<EOF
 Human review — you are the gate.
@@ -32,6 +34,18 @@ the English fallback.
 
   Languages endpoint
     $api/languages
+EOF
+
+if [[ -n "$edge" && "$edge" != "$hub" ]]; then
+  cat <<EOF
+
+  Same pair on the published edge ($edge)
+    $edge/papers/paper-1-the-universal-father
+    $edge/papers/paper-1-the-universal-father?lang=es
+EOF
+fi
+
+cat <<EOF
 
 Done when you can switch languages on the reader and the prose changes.
 Audio still comes from the public CDN; that pair is opt-in later.
