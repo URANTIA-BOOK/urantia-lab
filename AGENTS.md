@@ -4,8 +4,9 @@
 
 - This repo orchestrates local pairs. It does not become the API, the hub, or
   the pipeline.
-- Apps are sibling checkouts under `UKLOK_ROOT` (`URANTIA`, `urantia-dev-api`,
-  `urantia-hub`). Do not add them as submodules here.
+- Apps live as git submodules in this checkout (`hub/`, `api/`, `pipeline/`,
+  `data-sources/`), pinned to URANTIA-BOOK `main`. Nested pipeline language
+  trees initialize recursively. Do not restore a UKLOK_ROOT sibling layout.
 - Lab default is `MODE=prod` (`next start` / `bun start`, Caddy only).
   `MODE=dev` is hot-reload plus diagnostic ports. Close every turn on prod
   so the Cloudflare origin matches staging (`.cursor/rules/staging-prod-mode.mdc`).
