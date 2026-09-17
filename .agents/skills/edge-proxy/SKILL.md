@@ -18,12 +18,15 @@ only the lab contract.
 
 1. `stack/edge` is the Caddy stack. `make up` includes `edge-up` last.
    Caddy joins `apps` only.
-2. `make init` writes `CADDY_HTTP_PORT`, `CADDY_API_PATH`, and
-   `EDGE_PUBLIC_URL`, then `make/stamp-edge-urls.sh` sets `HUB_PUBLIC_URL`,
+2. `make init` defaults `EDGE_PUBLIC_URL` to `http://localhost:8080`. On a TTY
+   it asks for a hostname to expose. `CADDY_API_PATH` defaults to `/dev-api`
+   and is an env overwrite. `make/stamp-edge-urls.sh` derives
+   `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`,
    `NEXT_PUBLIC_HOST`, `NEXTAUTH_URL`, `API_PUBLIC_URL`, and
    `NEXT_PUBLIC_URANTIA_DEV_API_HOST`.
-3. Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. Recreate
-   the hub after a public-URL stamp; `NEXT_PUBLIC_*` bakes in at start.
+3. Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. Rebuild
+   the hub image after a public-URL stamp; `NEXT_PUBLIC_*` bake in at
+   `docker build`. Caddy host-matches `EDGE_HOSTNAME` plus loopback.
 4. The Cloudflare published route is `http://localhost:8080`. Do not move
    Caddy off that host port without changing the tunnel.
 5. `make verify` probes `127.0.0.1:$CADDY_HTTP_PORT` and the stamped public
