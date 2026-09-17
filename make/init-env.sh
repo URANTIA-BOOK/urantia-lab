@@ -9,6 +9,8 @@ SHARED_ENV_EXAMPLE="${SHARED_ENV_EXAMPLE:-$REPOSITORY_ROOT/.env.shared.example}"
 source "$SCRIPT_DIR/project-name.sh"
 # shellcheck source=env-utils.sh
 source "$SCRIPT_DIR/env-utils.sh"
+# shellcheck source=edge-origin.sh
+source "$SCRIPT_DIR/edge-origin.sh"
 
 if [[ ! -f "$SHARED_ENV_EXAMPLE" ]]; then
   echo "missing $SHARED_ENV_EXAMPLE" >&2
@@ -52,16 +54,9 @@ set_env_value "$SHARED_ENV_FILE" REDIS_URL "$redis_url"
 
 host_port="$(read_env_value "$SHARED_ENV_FILE" POSTGRES_HOST_PORT)"
 redis_port="$(read_env_value "$SHARED_ENV_FILE" REDIS_HOST_PORT)"
-api_port="$(read_env_value "$SHARED_ENV_FILE" API_HOST_PORT)"
-hub_port="$(read_env_value "$SHARED_ENV_FILE" HUB_HOST_PORT)"
 set_env_value "$SHARED_ENV_FILE" PAPERS_DATABASE_URL_HOST "postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@127.0.0.1:${host_port}/$(read_env_value "$SHARED_ENV_FILE" POSTGRES_DB)"
 set_env_value "$SHARED_ENV_FILE" HUB_DATABASE_URL_HOST "postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@127.0.0.1:${host_port}/$(read_env_value "$SHARED_ENV_FILE" HUB_DB)"
 set_env_value "$SHARED_ENV_FILE" REDIS_URL_HOST "redis://:$(read_env_value "$SHARED_ENV_FILE" REDIS_PASSWORD)@127.0.0.1:${redis_port}"
-set_env_value "$SHARED_ENV_FILE" API_PUBLIC_URL "http://127.0.0.1:${api_port}"
-set_env_value "$SHARED_ENV_FILE" HUB_PUBLIC_URL "http://127.0.0.1:${hub_port}"
-set_env_value "$SHARED_ENV_FILE" NEXT_PUBLIC_URANTIA_DEV_API_HOST "http://127.0.0.1:${api_port}"
-set_env_value "$SHARED_ENV_FILE" NEXT_PUBLIC_HOST "http://127.0.0.1:${hub_port}"
-set_env_value "$SHARED_ENV_FILE" NEXTAUTH_URL "http://127.0.0.1:${hub_port}"
 
 if [[ -n "${HTTP_PORT:-}" ]]; then
   set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT "$HTTP_PORT"
@@ -69,18 +64,15 @@ elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)" ]]; then
   set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT \
     "$(read_env_value "$SHARED_ENV_EXAMPLE" CADDY_HTTP_PORT)"
 fi
-if [[ -n "${CADDY_API_PATH:-}" ]]; then
-  set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH "$CADDY_API_PATH"
-elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)" ]]; then
-  set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH \
-    "$(read_env_value "$SHARED_ENV_EXAMPLE" CADDY_API_PATH)"
-fi
-if [[ -n "${EDGE_PUBLIC_URL:-}" ]]; then
-  set_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL "${EDGE_PUBLIC_URL%/}"
-elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)" ]]; then
-  set_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL \
-    "$(read_env_value "$SHARED_ENV_EXAMPLE" EDGE_PUBLIC_URL)"
-fi
+
+caddy_port="$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)"
+[[ -n "$caddy_port" ]] || caddy_port=8080
+
+api_path="$(choose_caddy_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)" "$existed")"
+set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH "$api_path"
+
+edge_url="$(choose_edge_public_url "$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)" "$existed" "$caddy_port")"
+set_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL "$edge_url"
 
 SHARED_ENV_FILE="$SHARED_ENV_FILE" "$SCRIPT_DIR/stamp-edge-urls.sh"
 

@@ -44,12 +44,16 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_HOST)" 'http://
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXTAUTH_URL)" 'http://localhost:8080' "local NEXTAUTH_URL"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'http://localhost:8080/dev-api' "local API under /dev-api"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_URANTIA_DEV_API_HOST)" 'http://localhost:8080/dev-api' "local browser API host"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_HOSTNAME)" 'localhost' "local EDGE_HOSTNAME"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'http' "local forwarded proto"
 
 write_shared 'https://urantia.uklok.cloud/'
 run_stamp
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" HUB_PUBLIC_URL)" 'https://urantia.uklok.cloud' "public hub strips trailing slash"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'https://urantia.uklok.cloud/dev-api' "public API has no double slash"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_URANTIA_DEV_API_HOST)" 'https://urantia.uklok.cloud/dev-api' "public browser API host"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_HOSTNAME)" 'urantia.uklok.cloud' "public EDGE_HOSTNAME"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'https' "public forwarded proto"
 
 write_shared 'https://urantia.uklok.cloud'
 printf 'CADDY_API_PATH=/v1\n' >>"$stamp_dir/.env.shared"

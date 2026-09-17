@@ -39,5 +39,41 @@ grep -qx "API_ROOT=$ROOT/api" "$tmp" || fail "API_ROOT must be the in-repo api s
 grep -qx "HUB_ROOT=$ROOT/hub" "$tmp" || fail "HUB_ROOT must be the in-repo hub submodule"
 grep -qx "DATA_SOURCES_ROOT=$ROOT/data-sources" "$tmp" || fail "DATA_SOURCES_ROOT must be the in-repo data-sources submodule"
 grep -qx "BOOK_TREE=$ROOT/pipeline/source" "$tmp" || fail "BOOK_TREE must be pipeline/source"
+grep -qx "EDGE_PUBLIC_URL=http://localhost:8080" "$tmp" || fail "fresh/empty origin must default to localhost"
+grep -qx "EDGE_HOSTNAME=localhost" "$tmp" || fail "EDGE_HOSTNAME must be derived from the origin"
+grep -qx "CADDY_API_PATH=/dev-api" "$tmp" || fail "CADDY_API_PATH must default to /dev-api"
+grep -qx "API_PUBLIC_URL=http://localhost:8080/dev-api" "$tmp" || fail "API_PUBLIC_URL must be origin + CADDY_API_PATH"
+grep -qx "HUB_PUBLIC_URL=http://localhost:8080" "$tmp" || fail "HUB_PUBLIC_URL must follow the published origin"
+
+kept="$(mktemp)"
+trap 'rm -f "$tmp" "$kept"' EXIT
+cat >"$kept" <<EOF
+COMPOSE_PROJECT_NAME=urantialab
+EDGE_PUBLIC_URL=https://urantia.uklok.cloud
+CADDY_API_PATH=/dev-api
+POSTGRES_USER=urantia
+POSTGRES_PASSWORD=testpass
+POSTGRES_DB=papers
+HUB_DB=hub
+REDIS_PASSWORD=testredis
+NEXTAUTH_SECRET=testsecret
+POSTGRES_HOST_PORT=5433
+REDIS_HOST_PORT=6380
+HUB_PUBLIC_URL=https://old.example
+API_PUBLIC_URL=https://old.example/api
+EOF
+SHARED_ENV_FILE="$kept" "$ROOT/make/init-env.sh" >/dev/null
+grep -qx "EDGE_PUBLIC_URL=https://urantia.uklok.cloud" "$kept" \
+  || fail "existing EDGE_PUBLIC_URL must be kept on non-TTY re-init"
+grep -qx "HUB_PUBLIC_URL=https://urantia.uklok.cloud" "$kept" \
+  || fail "existing origin must restamp derived hub URL"
+grep -qx "EDGE_HOSTNAME=urantia.uklok.cloud" "$kept" \
+  || fail "existing origin must derive EDGE_HOSTNAME"
+
+CADDY_API_PATH=/v1 EDGE_PUBLIC_URL=http://localhost:8080 \
+  SHARED_ENV_FILE="$tmp" "$ROOT/make/init-env.sh" >/dev/null
+grep -qx "CADDY_API_PATH=/v1" "$tmp" || fail "CADDY_API_PATH env must win"
+grep -qx "API_PUBLIC_URL=http://localhost:8080/v1" "$tmp" \
+  || fail "API_PUBLIC_URL must follow CADDY_API_PATH"
 
 echo "init-env: leftover sibling paths restamp onto in-repo checkouts"
