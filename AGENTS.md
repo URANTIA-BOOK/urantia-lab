@@ -13,9 +13,15 @@
   Do not import Wealth's Hasura, Auth0, or Portainer.
   The narrow exception is a Caddy path-prefix edge (`stack/edge`) so one
   Cloudflare published route (`localhost:8080`) can reach the hub and the API.
-  Browser traffic uses `EDGE_PUBLIC_URL`; hub SSR stays on
+  Browser traffic uses `EDGE_PUBLIC_URL` (default `http://localhost:8080`).
+  A TTY `make init` asks before a public hostname. Derived values:
+  `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`, `API_PUBLIC_URL`,
+  `NEXT_PUBLIC_*`, `NEXTAUTH_URL`. Hub SSR stays on
   `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The papers API is mounted at
   `CADDY_API_PATH` (default `/dev-api`) because the hub already owns `/api`.
+  Caddy `:80` host-matches `EDGE_HOSTNAME` plus loopback.
+  Prod compose builds `hub/Dockerfile` and `api/Dockerfile` and bind-mounts
+  book trees only. Module onboarding is each repo's `.devcontainer`.
 - Audio stays on the public CDN for this train.
 - Official Foundation trees supersede AI translations. Overlay `spa/fre/ger`
   as API `es/fr/de`.

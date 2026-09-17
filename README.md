@@ -25,20 +25,26 @@ A plain clone still works: `make init` runs `git submodule update --init --recur
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
 
-Phone / Cloudflare review uses the published edge:
+`make init` defaults the published origin to `http://localhost:8080`. On a TTY
+it asks for a hostname if you want to expose this copy. Hub/API/Next public
+URLs and `EDGE_FORWARDED_PROTO` are derived from that origin plus
+`CADDY_API_PATH` (default `/dev-api`). Caddy only serves `EDGE_HOSTNAME` and
+loopback; any other Host gets 404.
 
-```text
-https://urantia.uklok.cloud
-https://urantia.uklok.cloud/dev-api/health
+```bash
+make init                                          # localhost
+make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud
+make init CADDY_API_PATH=/dev-api HTTP_PORT=8080
 ```
 
-Caddy listens on `CADDY_HTTP_PORT` (default `8080`) so a dashboard tunnel whose
-origin is `http://localhost:8080` can reach both the hub (`/`) and the papers
-API (`/dev-api`). That prefix avoids the hub's NextAuth `/api` routes. `make
-init` stamps `NEXT_PUBLIC_*` and `NEXTAUTH_URL` from `EDGE_PUBLIC_URL`. Hub SSR
-still calls `http://api:3000` on the Compose network.
+Caddy listens on `CADDY_HTTP_PORT` (default `8080`). A Cloudflare tunnel whose
+origin is `http://localhost:8080` can reach the hub (`/`) and the papers API
+(`$CADDY_API_PATH`) once you stamp a public hostname. Hub SSR still calls
+`http://api:3000` on the Compose network.
 
-Overwrite doors: `make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud HTTP_PORT=8080`.
+Hub and API run from their module Dockerfiles. Prod binds only book trees
+(`pipeline/source`, `pipeline/langs`). Open `hub/.devcontainer` or
+`api/.devcontainer` to onboard a module.
 
 On a Cursor Cloud Agent, run `uklok-agent docker-local` (from environment
 `start`, after `boot`) before `make up`. The hosted Docker engine cannot
