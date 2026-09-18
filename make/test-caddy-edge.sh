@@ -43,6 +43,14 @@ if grep -q 'configs:' "$COMPOSE"; then
   fail "edge compose must not embed a second Caddyfile"
 fi
 
+if [[ -f "$ROOT/.env.shared" ]] && command -v docker >/dev/null; then
+  expected="$(sed -n 's/^CADDY_HTTP_PORT=//p' "$ROOT/.env.shared" | tail -n 1)"
+  published="$(make -C "$ROOT/stack/edge" config 2>/dev/null \
+    | awk '/published:/{gsub(/"/,""); print $2; exit}')"
+  [[ -n "$expected" && "$published" == "$expected" ]] \
+    || fail "compose must publish shared CADDY_HTTP_PORT $expected (got '$published')"
+fi
+
 if command -v docker >/dev/null; then
   docker run --rm \
     -e CADDY_API_PATH=/v1 \
