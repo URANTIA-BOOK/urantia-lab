@@ -2,6 +2,8 @@
 # Stamp public hub/API origins from EDGE_PUBLIC_URL + CADDY_API_PATH.
 # A localhost / 127.0.0.1 origin follows CADDY_HTTP_PORT. A public host
 # does not (the bind port is the tunnel target, not the browser origin).
+# Compose interpolates stack/.env for `ports:`, so CADDY_HTTP_PORT is
+# copied onto every stamped file or the edge keeps publishing 8080.
 # Browser traffic uses the published edge; hub SSR stays on
 # URANTIA_DEV_API_INTERNAL_HOST=http://api:3000 (Compose, not this file).
 set -euo pipefail
@@ -51,6 +53,7 @@ stamp_file() {
   set_env_value "$env_file" EDGE_HOSTNAME "$hostname"
   set_env_value "$env_file" EDGE_FORWARDED_PROTO "$proto"
   set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
+  set_env_value "$env_file" CADDY_HTTP_PORT "$caddy_port"
   set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
 }
 
