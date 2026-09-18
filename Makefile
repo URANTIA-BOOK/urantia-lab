@@ -48,7 +48,7 @@ help:
 	@echo "  make verify             Probe edge, API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
-	@echo "  make destroy CONFIRM=true  Remove containers, volumes, and networks"
+	@echo "  make destroy CONFIRM=true  Remove this copy's containers, volumes, networks, and :local images"
 	@echo ""
 	@echo "A second copy: make init PROJECT_NAME=wt-review POSTGRES_HOST_PORT=5434"
 
@@ -92,6 +92,7 @@ validate: init network check-siblings
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
 	@./make/test-init-env.sh
+	@./make/test-destroy.sh
 	@echo "$(MODE) stack is valid."
 
 validate-dev:

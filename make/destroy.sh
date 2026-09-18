@@ -14,7 +14,7 @@ if ! valid_compose_project_name "$name"; then
 fi
 
 if [[ "${CONFIRM:-}" != "true" ]]; then
-  echo "Destroying Compose project '$name' removes containers, project volumes, and networks." >&2
+  echo "Destroying Compose project '$name' removes containers, project volumes, networks, and ${name}-*:local images." >&2
   echo "Usage: make destroy CONFIRM=true" >&2
   exit 1
 fi
@@ -33,6 +33,13 @@ network_ids="$(docker network ls -q --filter "label=com.docker.compose.project=$
 for network in "${name}-apps" "${name}-backend"; do
   docker network inspect "$network" >/dev/null 2>&1 || continue
   docker network rm "$network" >/dev/null || true
+done
+
+# One copy owns ${name}-api:local and ${name}-hub:local. Leave shared
+# bases (caddy, postgres, redis) and every other project's tags.
+for image in "${name}-api:local" "${name}-hub:local"; do
+  docker image inspect "$image" >/dev/null 2>&1 || continue
+  docker image rm "$image" >/dev/null || true
 done
 
 echo "Compose project '$name' destroyed."

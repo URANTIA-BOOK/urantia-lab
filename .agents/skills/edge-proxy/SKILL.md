@@ -51,13 +51,17 @@ only the lab contract.
    then `make init PROJECT_NAME=<unique> HTTP_PORT=<free>
    CADDY_API_PATH=/v1` and `make up` with overwrite keys unset.
    Probe `/`, `$CADDY_API_PATH/health`, and `Host: evil.example`.
-   Contract tests do not start Caddy.
+   Then close the copy: `make destroy CONFIRM=true` and
+   `git worktree remove`. A prove stack that stays up is leftover
+   containers, volumes, networks, and `${PROJECT_NAME}-*:local`
+   images. Contract tests do not start Caddy.
 
 ## Not this
 
 - Mounting the papers API at `/api` or `/papers`.
 - Importing Wealth Hasura, Auth0, or Portainer.
 - Claiming `make up` from the operator checkout or from leftover
-  containers. Prove it on a detached worktree.
+  containers. Prove it on a detached worktree, then destroy that
+  copy. Do not leave a second Compose project running.
 - Claiming languages verified from `make verify` alone.
 - Editing `metadata.json` or treating the lab as the book text owner.

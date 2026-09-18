@@ -86,7 +86,7 @@ Stop or remove this copy:
 
 ```bash
 make down                     # keeps volumes
-make destroy CONFIRM=true     # containers, project volumes, and networks
+make destroy CONFIRM=true     # containers, project volumes, networks, and this copy's :local images
 ```
 
 `make help` lists the rest.

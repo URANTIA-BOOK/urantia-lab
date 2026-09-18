@@ -61,6 +61,8 @@
 - Compose changes: `make validate`.
 - Lifecycle changes: `make up`, `make seed`, `make verify`, then `make review`.
   Do not claim `make up` from this checkout — detach a worktree at `HEAD`
-  with an isolated `PROJECT_NAME` and `HTTP_PORT` (see
-  `.agents/skills/edge-proxy/SKILL.md`).
+  with an isolated `PROJECT_NAME` and `HTTP_PORT`, then `make destroy
+  CONFIRM=true` and remove the worktree (see
+  `.agents/skills/edge-proxy/SKILL.md`). A second copy that stays up
+  is residual mess.
 - Never version `.env`, `.env.shared`, or generated secrets.
