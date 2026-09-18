@@ -40,6 +40,7 @@ stamp_file() {
   local api_url="$3"
   local hostname="$4"
   local proto="$5"
+  local hosts="$6"
 
   set_env_value "$env_file" EDGE_PUBLIC_URL "$origin"
   set_env_value "$env_file" HUB_PUBLIC_URL "$origin"
@@ -49,6 +50,7 @@ stamp_file() {
   set_env_value "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST "$api_url"
   set_env_value "$env_file" EDGE_HOSTNAME "$hostname"
   set_env_value "$env_file" EDGE_FORWARDED_PROTO "$proto"
+  set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
   set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
 }
 
@@ -72,6 +74,8 @@ fi
 api_path="$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
 api_url="$(join_origin_path "$origin" "$api_path")"
 proto="$(origin_scheme "$origin")"
+[[ -n "$caddy_port" ]] || caddy_port="$DEFAULT_CADDY_HTTP_PORT"
+hosts="$(caddy_host_matchers "$hostname" "$caddy_port")"
 
 targets=("$SHARED_ENV_FILE")
 for env_file in "$@"; do
@@ -81,5 +85,5 @@ done
 
 for env_file in "${targets[@]}"; do
   [[ -f "$env_file" ]] || continue
-  stamp_file "$env_file" "$origin" "$api_url" "$hostname" "$proto"
+  stamp_file "$env_file" "$origin" "$api_url" "$hostname" "$proto" "$hosts"
 done

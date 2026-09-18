@@ -46,6 +46,9 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'http://lo
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_URANTIA_DEV_API_HOST)" 'http://localhost:8080/dev-api' "local browser API host"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_HOSTNAME)" 'localhost' "local EDGE_HOSTNAME"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'http' "local forwarded proto"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HOST_MATCHERS)" \
+  'localhost 127.0.0.1 localhost:8080 127.0.0.1:8080' \
+  "localhost host list must not repeat localhost"
 
 write_shared 'http://localhost:8080'
 set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
@@ -53,6 +56,9 @@ run_stamp
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_PUBLIC_URL)" 'http://localhost:9080' "localhost origin follows CADDY_HTTP_PORT"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" HUB_PUBLIC_URL)" 'http://localhost:9080' "localhost hub follows CADDY_HTTP_PORT"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'http://localhost:9080/dev-api' "localhost API follows CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HOST_MATCHERS)" \
+  'localhost 127.0.0.1 localhost:9080 127.0.0.1:9080' \
+  "localhost host list follows the bind port once"
 
 write_shared 'https://urantia.uklok.cloud'
 set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
@@ -67,6 +73,9 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'https://u
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_URANTIA_DEV_API_HOST)" 'https://urantia.uklok.cloud/dev-api' "public browser API host"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_HOSTNAME)" 'urantia.uklok.cloud' "public EDGE_HOSTNAME"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'https' "public forwarded proto"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HOST_MATCHERS)" \
+  'urantia.uklok.cloud localhost 127.0.0.1 urantia.uklok.cloud:8080 localhost:8080 127.0.0.1:8080' \
+  "public host list keeps loopback without repeating the public name"
 
 write_shared 'https://urantia.uklok.cloud'
 printf 'CADDY_API_PATH=/v1\n' >>"$stamp_dir/.env.shared"

@@ -8,6 +8,7 @@ services:
     environment:
       CADDY_API_PATH: ${CADDY_API_PATH:-/dev-api}
       CADDY_HTTP_PORT: ${CADDY_HTTP_PORT:-8080}
+      CADDY_HOST_MATCHERS: "${CADDY_HOST_MATCHERS:-localhost localhost:8080 127.0.0.1 127.0.0.1:8080}"
       EDGE_HOSTNAME: ${EDGE_HOSTNAME:-localhost}
       EDGE_FORWARDED_PROTO: ${EDGE_FORWARDED_PROTO:-http}
     ports:

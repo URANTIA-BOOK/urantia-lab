@@ -47,6 +47,12 @@ set_env_value "$SHARED_ENV_FILE" HUB_ROOT "$REPOSITORY_ROOT/hub"
 set_env_value "$SHARED_ENV_FILE" DATA_SOURCES_ROOT "$REPOSITORY_ROOT/data-sources"
 set_env_value "$SHARED_ENV_FILE" BOOK_TREE "$REPOSITORY_ROOT/pipeline/source"
 
+for key in POSTGRES_HOST_PORT REDIS_HOST_PORT API_HOST_PORT HUB_HOST_PORT; do
+  if [[ -n "${!key:-}" ]]; then
+    set_env_value "$SHARED_ENV_FILE" "$key" "${!key}"
+  fi
+done
+
 papers_url="postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@postgres:5432/$(read_env_value "$SHARED_ENV_FILE" POSTGRES_DB)"
 hub_url="postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@postgres:5432/$(read_env_value "$SHARED_ENV_FILE" HUB_DB)"
 redis_url="redis://:$(read_env_value "$SHARED_ENV_FILE" REDIS_PASSWORD)@redis:6379"

@@ -32,7 +32,10 @@ only the lab contract.
    `NEXT_PUBLIC_URANTIA_DEV_API_HOST`.
 3. Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. Rebuild
    the hub image after a public-URL stamp; `NEXT_PUBLIC_*` bake in at
-   `docker build`. Caddy host-matches `EDGE_HOSTNAME` plus loopback.
+   `docker build`. Caddy host-matches `CADDY_HOST_MATCHERS` (unique
+   hostname plus loopback). Do not list `EDGE_HOSTNAME` and `localhost`
+   as separate literals — the default hostname is localhost and Caddy
+   rejects a repeated host.
 4. The Cloudflare published route is `http://localhost:8080`. Do not move
    Caddy off that host port without changing the tunnel.
 5. `make verify` probes `127.0.0.1:$CADDY_HTTP_PORT` and the stamped public

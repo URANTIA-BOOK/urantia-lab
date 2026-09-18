@@ -26,7 +26,7 @@
 }
 
 :80 {
-	@urantia host {$EDGE_HOSTNAME} {$EDGE_HOSTNAME}:{$CADDY_HTTP_PORT} localhost localhost:{$CADDY_HTTP_PORT} 127.0.0.1 127.0.0.1:{$CADDY_HTTP_PORT}
+	@urantia host {$CADDY_HOST_MATCHERS}
 	handle @urantia {
 		import urantia_edge
 	}

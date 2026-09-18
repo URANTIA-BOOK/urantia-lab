@@ -22,7 +22,8 @@
   `NEXT_PUBLIC_*`, `NEXTAUTH_URL`. Hub SSR stays on
   `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The papers API is mounted at
   `CADDY_API_PATH` (default `/dev-api`) because the hub already owns `/api`.
-  Caddy `:80` host-matches `EDGE_HOSTNAME` plus loopback.
+  Caddy `:80` host-matches `CADDY_HOST_MATCHERS` (unique `EDGE_HOSTNAME`
+  plus loopback; localhost as the hostname must not repeat).
   Prod compose builds `hub/Dockerfile` and `api/Dockerfile` and bind-mounts
   book trees only. Module onboarding is each repo's `.devcontainer`.
 - Audio stays on the public CDN for this train.

@@ -78,6 +78,36 @@ derive_edge_public_url() {
   printf 'https://%s' "$host"
 }
 
+# Unique Host tokens for Caddy. EDGE_HOSTNAME defaults to localhost, so a
+# handwritten "EDGE_HOSTNAME plus localhost" list repeats localhost and
+# Caddy refuses to start.
+caddy_host_matchers() {
+  local hostname="${1:-$DEFAULT_EDGE_HOSTNAME}"
+  local port="${2:-$DEFAULT_CADDY_HTTP_PORT}"
+  local hosts="" candidate
+  _append_unique_host() {
+    candidate="$1"
+    [[ -n "$candidate" ]] || return 0
+    case " $hosts " in
+      *" $candidate "*) return 0 ;;
+    esac
+    if [[ -z "$hosts" ]]; then
+      hosts="$candidate"
+    else
+      hosts="$hosts $candidate"
+    fi
+  }
+  _append_unique_host "$hostname"
+  _append_unique_host "localhost"
+  _append_unique_host "127.0.0.1"
+  if valid_http_port "$port"; then
+    _append_unique_host "${hostname}:${port}"
+    _append_unique_host "localhost:${port}"
+    _append_unique_host "127.0.0.1:${port}"
+  fi
+  printf '%s' "$hosts"
+}
+
 choose_edge_public_url() {
   local current="${1:-}"
   local existed="${2:-false}"
