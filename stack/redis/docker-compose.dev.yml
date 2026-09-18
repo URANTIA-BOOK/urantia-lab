@@ -2,3 +2,11 @@ services:
   redis:
     ports:
       - "${REDIS_HOST_PORT:-6380}:6379"
+    networks:
+      - backend
+      - apps
+
+networks:
+  apps:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true

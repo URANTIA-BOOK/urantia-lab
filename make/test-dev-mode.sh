@@ -15,8 +15,12 @@ grep -q 'ports:' "$ROOT/stack/db/postgres/docker-compose.yml" \
   && fail "postgres production compose must not publish host ports"
 grep -q '${POSTGRES_HOST_PORT' "$ROOT/stack/db/postgres/docker-compose.dev.yml" \
   || fail "postgres dev overlay must publish POSTGRES_HOST_PORT from shared"
+grep -q 'apps:' "$ROOT/stack/db/postgres/docker-compose.dev.yml" \
+  || fail "postgres dev overlay must join apps so the host port can bind"
 grep -q '${REDIS_HOST_PORT' "$ROOT/stack/redis/docker-compose.dev.yml" \
   || fail "redis dev overlay must publish REDIS_HOST_PORT from shared"
+grep -q 'apps:' "$ROOT/stack/redis/docker-compose.dev.yml" \
+  || fail "redis dev overlay must join apps so the host port can bind"
 grep -q '${API_HOST_PORT' "$ROOT/stack/api/docker-compose.dev.yml" \
   || fail "api dev overlay must publish API_HOST_PORT from shared"
 grep -q '${HUB_HOST_PORT' "$ROOT/stack/hub/docker-compose.dev.yml" \

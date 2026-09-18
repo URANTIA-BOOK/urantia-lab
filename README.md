@@ -76,6 +76,8 @@ watch code — recreate it after an app change (`make hub-up`). `make
 dev-up` (`yarn dev` / `bun --hot`, plus Postgres/Redis/API/hub host ports)
 is only for an in-turn edit; flip back to `make up` (prod) before you
 finish. `make postgres-up MODE=dev` is the same overlay door for one stack.
+Postgres and Redis also join the `apps` network on that overlay so the
+host port can bind (`backend` is `--internal`).
 
 ```bash
 make validate-dev

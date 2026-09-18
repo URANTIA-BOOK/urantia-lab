@@ -2,3 +2,13 @@ services:
   postgres:
     ports:
       - "${POSTGRES_HOST_PORT:-5433}:5432"
+    # Host publishes do not bind on an --internal network. apps is the
+    # existing non-internal plane (Wealth pgAdmin joins it for the same reason).
+    networks:
+      - backend
+      - apps
+
+networks:
+  apps:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true

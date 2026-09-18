@@ -10,6 +10,9 @@
 - Lab default is `MODE=prod` (`next start` / `bun start`, Caddy only).
   `MODE=dev` is the overlay door (`make dev-up` / `make postgres-up MODE=dev`):
   hot-reload plus diagnostic host ports from `docker-compose.dev.yml`.
+  Backend-only services join `apps` on that overlay so Docker can bind a
+  host port; an `--internal` backend alone keeps `NetworkSettings.Ports`
+  null. Prod stays on `backend` only.
   Close every turn on prod so the Cloudflare origin matches staging
   (`.cursor/rules/staging-prod-mode.mdc`).
   Do not import Wealth's Hasura, Auth0, or Portainer.
