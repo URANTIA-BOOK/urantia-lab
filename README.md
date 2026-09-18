@@ -3,13 +3,18 @@
 Local conductor for the reading platform. One copy of this repo is one Compose
 project (default name `urantialab`). The lab default is `MODE=prod`: hub
 `next start`, API `bun start`, and Caddy as the only published ingress, so
-phone/Cloudflare traffic matches staging. `MODE=dev` adds hot reload and
-diagnostic host ports.
+phone/Cloudflare traffic matches staging. `make dev-up` (`MODE=dev`) adds
+the `docker-compose.dev.yml` overlays: hot reload and diagnostic host ports
+from `.env.shared`. `.env.shared` is the only identity file; stack `.env`
+files keep only the keys their `.env.example` already owns.
 
-It does not own book text, the API, or the hub. It starts their local pairs
-and runs the verification door.
+Hub, API, pipeline, and data-sources live here as git submodules. The lab
+does not become those apps — it starts their local pairs and runs the
+verification door.
 
 ```bash
+git clone --recurse-submodules git@github.com:URANTIA-BOOK/urantia-lab.git
+cd urantia-lab
 make init
 make up
 make seed
@@ -17,23 +22,40 @@ make verify
 make review
 ```
 
+A plain clone still works: `make init` runs `git submodule update --init --recursive`.
+
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
 
-Phone / Cloudflare review uses the published edge:
+`make init` writes `.env.shared` once. The first TTY write asks for the host
+port (default `8080`), the papers API path (default `/dev-api`), and a
+hostname if you want to expose this copy. Later `make init` and `make up`
+keep those values and restamp derived URLs onto `.env.shared` only.
+`make up` starts the stacks; it does not run the contract tests
+(`make validate` does). Change a stored key with a Make-time overwrite
+(`HTTP_PORT`, `CADDY_API_PATH`, `EDGE_PUBLIC_URL`), not by answering
+prompts again. Hub/API/Next public URLs and `EDGE_FORWARDED_PROTO` follow
+that origin plus `CADDY_API_PATH`. A localhost origin stays on
+`CADDY_HTTP_PORT`; a public hostname does not (that bind is the tunnel
+target). Compose interpolates `CADDY_HTTP_PORT` from `--env-file
+.env.shared`. Caddy host-matches `CADDY_HOST_MATCHERS` (unique hostname
+plus loopback). Any other Host gets 404.
 
-```text
-https://urantia.uklok.cloud
-https://urantia.uklok.cloud/dev-api/health
+```bash
+make init                                          # localhost:8080
+make init HTTP_PORT=9090
+make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud
+make init CADDY_API_PATH=/dev-api HTTP_PORT=8080
 ```
 
-Caddy listens on `CADDY_HTTP_PORT` (default `8080`) so a dashboard tunnel whose
-origin is `http://localhost:8080` can reach both the hub (`/`) and the papers
-API (`/dev-api`). That prefix avoids the hub's NextAuth `/api` routes. `make
-init` stamps `NEXT_PUBLIC_*` and `NEXTAUTH_URL` from `EDGE_PUBLIC_URL`. Hub SSR
-still calls `http://api:3000` on the Compose network.
+Caddy listens on `CADDY_HTTP_PORT` (default `8080`). A Cloudflare tunnel whose
+origin is `http://localhost:8080` can reach the hub (`/`) and the papers API
+(`$CADDY_API_PATH`) once you stamp a public hostname. Hub SSR still calls
+`http://api:3000` on the Compose network.
 
-Overwrite doors: `make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud HTTP_PORT=8080`.
+Hub and API run from their module Dockerfiles. Prod binds only book trees
+(`pipeline/source`, `pipeline/langs`). Open `hub/.devcontainer` or
+`api/.devcontainer` to onboard a module.
 
 On a Cursor Cloud Agent, run `uklok-agent docker-local` (from environment
 `start`, after `boot`) before `make up`. The hosted Docker engine cannot
@@ -46,16 +68,28 @@ API container. After an edit, re-seed Postgres and refresh the browser.
 
 | What you changed | Command | What updates |
 | --- | --- | --- |
-| English tree (`URANTIA/source`) | `make seed` | papers / paragraphs (upsert) |
+| English tree (`pipeline/source`) | `make seed` | papers / paragraphs (upsert) |
 | Spanish / French / German tree | `make seed-lang L=es` | `paragraph_translations` and titles |
 
 Content comes from Postgres after seed. In `MODE=prod` the hub does not
-watch code — recreate it after an app change (`make hub-up`). `MODE=dev`
-(`yarn dev` / `bun --hot`) is only for an in-turn edit; flip back to
-`make up` (prod) before you finish.
+watch code — recreate it after an app change (`make hub-up`). `make
+dev-up` (`yarn dev` / `bun --hot`, plus Postgres/Redis/API/hub host ports)
+is only for an in-turn edit; flip back to `make up` (prod) before you
+finish. `make postgres-up MODE=dev` is the same overlay door for one stack.
+Postgres and Redis also join the `apps` network on that overlay so the
+host port can bind (`backend` is `--internal`).
+
+```bash
+make validate-dev
+make postgres-up MODE=dev
+make dev-up
+make verify
+make dev-down
+make up
+```
 
 Pipeline markdown still needs `make lang-run` (or a split) before the tree JSON
-companions exist. Editing a companion under `langs/spanish` is enough for a
+companions exist. Editing a companion under `pipeline/langs/spanish` is enough for a
 lab overlay refresh.
 
 A second copy:
@@ -68,7 +102,7 @@ Stop or remove this copy:
 
 ```bash
 make down                     # keeps volumes
-make destroy CONFIRM=true     # containers, project volumes, and networks
+make destroy CONFIRM=true     # containers, project volumes, networks, and this copy's :local images
 ```
 
 `make help` lists the rest.

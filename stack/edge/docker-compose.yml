@@ -7,12 +7,14 @@ services:
       - ${SHARED_ENV_FILE:-../../.env.shared}
     environment:
       CADDY_API_PATH: ${CADDY_API_PATH:-/dev-api}
+      CADDY_HTTP_PORT: ${CADDY_HTTP_PORT:-8080}
+      CADDY_HOST_MATCHERS: "${CADDY_HOST_MATCHERS:-localhost localhost:8080 127.0.0.1 127.0.0.1:8080}"
+      EDGE_HOSTNAME: ${EDGE_HOSTNAME:-localhost}
+      EDGE_FORWARDED_PROTO: ${EDGE_FORWARDED_PROTO:-http}
     ports:
       - "${CADDY_HTTP_PORT:-8080}:80"
-    configs:
-      - source: caddyfile
-        target: /etc/caddy/Caddyfile
     volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
       - caddy-config:/config
     networks:
@@ -27,37 +29,6 @@ services:
       timeout: 5s
       retries: 12
       start_period: 20s
-
-configs:
-  caddyfile:
-    content: |
-      {
-      	auto_https off
-      }
-
-      (urantia_edge) {
-      	encode zstd gzip
-
-      	redir /dev-api /dev-api/
-      	handle_path /dev-api* {
-      		reverse_proxy api:3000 {
-      			header_up X-Forwarded-Proto https
-      			header_up X-Forwarded-Host {host}
-      		}
-      	}
-
-      	handle {
-      		reverse_proxy hub:3001 {
-      			flush_interval -1
-      			header_up X-Forwarded-Proto https
-      			header_up X-Forwarded-Host {host}
-      		}
-      	}
-      }
-
-      :80 {
-      	import urantia_edge
-      }
 
 volumes:
   caddy-data:
