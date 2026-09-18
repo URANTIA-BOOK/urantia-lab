@@ -40,9 +40,9 @@ help:
 	@echo ""
 	@echo "  make init               Submodules + name this copy + local secrets"
 	@echo "  make submodules         git submodule update --init --recursive"
-	@echo "  make validate           Validate the selected Compose model"
+	@echo "  make validate           Compose model + contract tests"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
-	@echo "  make up                 Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make up                 Start Postgres + Redis + API + hub + edge"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
@@ -97,7 +97,7 @@ validate: init network check-siblings
 validate-dev:
 	@$(MAKE) validate MODE=dev
 
-up: validate
+up: init network check-siblings
 	@set -e; for target in $(DEFAULT_UP_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE); \
 	done

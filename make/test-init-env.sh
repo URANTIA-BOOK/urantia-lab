@@ -92,4 +92,10 @@ make_port="$(printf 'probe:\n\t@printf %%s "$$HTTP_PORT"\n' \
   | make -f "$ROOT/make/project.mk" -f - HTTP_PORT=9090 probe)"
 [[ "$make_port" == "9090" ]] || fail "make HTTP_PORT=9090 must reach recipes (got '$make_port')"
 
+up_n="$(make -C "$ROOT" -n --no-print-directory up)"
+echo "$up_n" | grep -q test-edge-origin && fail "make up must not run the contract tests"
+echo "$up_n" | grep -q init-env.sh || fail "make up must still restamp via init"
+validate_n="$(make -C "$ROOT" -n --no-print-directory validate)"
+echo "$validate_n" | grep -q test-edge-origin || fail "make validate must run the contract tests"
+
 echo "init-env: leftover sibling paths restamp onto in-repo checkouts"

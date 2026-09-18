@@ -22,6 +22,9 @@ existed=false
 if [[ "$existed" != "true" ]]; then
   cp "$SHARED_ENV_EXAMPLE" "$SHARED_ENV_FILE"
   echo "created $SHARED_ENV_FILE"
+  if [[ -t 0 ]]; then
+    INIT_INTERVIEW=1
+  fi
 fi
 
 current="$(read_env_value "$SHARED_ENV_FILE" COMPOSE_PROJECT_NAME)"

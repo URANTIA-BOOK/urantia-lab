@@ -37,6 +37,9 @@ out="$(existing_env_choice "9090" "9080" true)"
 if existing_env_choice "" "" true; then
   fail "existing_env_choice must miss when nothing is written"
 fi
+if init_interviewing; then
+  fail "sourced choosers must not interview unless init-env set INIT_INTERVIEW"
+fi
 
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
@@ -107,6 +110,49 @@ if "Published port" not in out:
     sys.stderr.write(out + "\n")
     sys.exit("interactive init must ask for Published port")
 print("init-env TTY: port 9090 + /v1 + localhost stamps a single-line origin")
+
+# make validate sources choosers on the operator TTY. /v1 on stdin must not
+# become the default (that is how make up failed after hostname).
+chooser_out = tmpdir / "sourced-choosers.out"
+os.environ["CHOOSER_OUT"] = str(chooser_out)
+pid, fd = pty.fork()
+if pid == 0:
+    os.chdir(root)
+    os.execv(
+        "/bin/bash",
+        [
+            "bash",
+            "-c",
+            """
+set -euo pipefail
+source make/edge-origin.sh
+{
+  printf '%s\\n' "$(choose_edge_public_url "" false 8080)"
+  printf '%s\\n' "$(choose_caddy_api_path "" false)"
+} >"$CHOOSER_OUT"
+""",
+        ],
+    )
+os.write(fd, b"/v1\n/v1\n")
+chunks = []
+while True:
+    try:
+        data = os.read(fd, 4096)
+    except OSError:
+        break
+    if not data:
+        break
+    chunks.append(data)
+os.waitpid(pid, 0)
+sourced = b"".join(chunks).decode("utf-8", "replace")
+written = chooser_out.read_text() if chooser_out.exists() else ""
+if "Published hostname" in sourced or "Papers API path" in sourced:
+    sys.stderr.write(sourced + "\n")
+    sys.exit("sourced choosers on a TTY must not interview")
+if written != "http://localhost:8080\n/dev-api\n":
+    sys.stderr.write(sourced + "\n" + written + "\n")
+    sys.exit("sourced choosers on a TTY must default, not read stdin")
+print("sourced choosers on a TTY default without interviewing")
 
 # Re-init (existing .env.shared, same path as make up → init) keeps the file.
 # A TTY must not interview again.

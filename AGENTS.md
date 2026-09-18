@@ -31,8 +31,10 @@
 
 ## Operating contract
 
-- The root Makefile is the door: `init`, `validate`, `validate-dev`, `up`,
-  `seed`, `seed-lang`, `verify`, `review`, `down`, `destroy`.
+- The root Makefile is the door: `init` writes identity (interviews once),
+  `validate` is compose config plus contract tests, `up` starts the stacks.
+  `up` does not run `validate`. `seed`, `seed-lang`, `verify`, `review`,
+  `down`, `destroy` stay lifecycle doors.
 - End every turn with `make up` (prod) and `make verify`. Do not leave
   `yarn dev` or `bun --hot` serving the published origin.
 - `COMPOSE_PROJECT_NAME` in `.env.shared` isolates containers, volumes, and

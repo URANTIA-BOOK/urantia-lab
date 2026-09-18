@@ -28,9 +28,10 @@ paper 1 is Foundation prose, not the English fallback.
 `make init` writes `.env.shared` once. The first TTY write asks for the host
 port (default `8080`), the papers API path (default `/dev-api`), and a
 hostname if you want to expose this copy. Later `make init` and `make up`
-keep those values and restamp derived URLs. Change a stored key with a
-Make-time overwrite (`HTTP_PORT`, `CADDY_API_PATH`, `EDGE_PUBLIC_URL`),
-not by answering prompts again. Hub/API/Next public URLs and
+keep those values and restamp derived URLs. `make up` starts the stacks;
+it does not run the contract tests (`make validate` does). Change a stored
+key with a Make-time overwrite (`HTTP_PORT`, `CADDY_API_PATH`,
+`EDGE_PUBLIC_URL`), not by answering prompts again. Hub/API/Next public URLs and
 `EDGE_FORWARDED_PROTO` follow that origin plus `CADDY_API_PATH`. A localhost
 origin stays on `CADDY_HTTP_PORT`; a public hostname does not (that bind is
 the tunnel target). Caddy only serves `EDGE_HOSTNAME` and loopback; any

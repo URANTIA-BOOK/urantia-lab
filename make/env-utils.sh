@@ -85,3 +85,10 @@ existing_env_choice() {
   fi
   return 1
 }
+
+# Interview is an init-env mode, not "stdin is a terminal". make validate
+# and make up run on a TTY and must not ask. init-env sets INIT_INTERVIEW=1
+# only when it is creating .env.shared on a TTY.
+init_interviewing() {
+  [[ "${INIT_INTERVIEW:-}" == "1" && -t 0 ]]
+}

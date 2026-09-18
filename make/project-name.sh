@@ -46,7 +46,7 @@ choose_compose_project_name() {
     printf '%s' "$chosen"
     return
   fi
-  if [[ -t 0 ]]; then
+  if init_interviewing; then
     read -r -p "Compose project name [$suggested]: " value
     printf '%s' "${value:-$suggested}"
     return

@@ -1,6 +1,8 @@
 # Published origin: localhost by default. A public hostname is opt-in.
-# First write interviews. Later make init / make up keep .env.shared
-# (existing_env_choice). stamp-edge-urls.sh derives browser URLs from
+# First write interviews (INIT_INTERVIEW from init-env). Later make init /
+# make up keep .env.shared (existing_env_choice). A TTY alone must not
+# interview — make validate sources these functions. stamp-edge-urls.sh
+# derives browser URLs from
 # EDGE_PUBLIC_URL + CADDY_API_PATH and keeps a localhost origin on the
 # bind port. Do not read the process HOSTNAME (that is the machine).
 # shellcheck source=env-utils.sh
@@ -52,7 +54,7 @@ choose_caddy_http_port() {
     return
   fi
 
-  if [[ -t 0 ]]; then
+  if init_interviewing; then
     read -r -p "Published port [${suggested}]: " value
     value="${value:-$suggested}"
     if ! valid_http_port "$value"; then
@@ -96,7 +98,7 @@ choose_edge_public_url() {
     return
   fi
 
-  if [[ -t 0 ]]; then
+  if init_interviewing; then
     prompt_host="$(origin_hostname "$suggested")"
     [[ -n "$prompt_host" ]] || prompt_host="$DEFAULT_EDGE_HOSTNAME"
     echo "Published origin defaults to localhost. Enter a hostname to expose this copy." >&2
@@ -131,7 +133,7 @@ choose_caddy_api_path() {
     return
   fi
 
-  if [[ -t 0 ]]; then
+  if init_interviewing; then
     read -r -p "Papers API path [${suggested}]: " value
     if [[ -z "$value" ]]; then
       printf '%s' "$suggested"
