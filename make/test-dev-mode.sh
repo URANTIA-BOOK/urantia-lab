@@ -52,11 +52,12 @@ echo "$root_n" | grep -q 'MODE=dev' \
 if [[ -f "$ROOT/.env.shared" ]] && command -v docker >/dev/null; then
   expected="$(sed -n 's/^POSTGRES_HOST_PORT=//p' "$ROOT/.env.shared" | tail -n 1)"
   expected="${expected:-5433}"
-  published="$(make -C "$ROOT/stack/db/postgres" MODE=dev config 2>/dev/null \
-    | awk '/published:/{gsub(/"/,""); print $2; exit}')"
+  published="$(make -C "$ROOT/stack/db/postgres" MODE=dev config \
+    | awk '/published:/{gsub(/"/,""); print $2; exit}')" \
+    || fail "MODE=dev postgres compose config failed"
   [[ "$published" == "$expected" ]] \
     || fail "MODE=dev postgres compose must publish shared POSTGRES_HOST_PORT $expected (got '$published')"
-  if make -C "$ROOT/stack/db/postgres" MODE=prod config 2>/dev/null | grep -q 'published:'; then
+  if make -C "$ROOT/stack/db/postgres" MODE=prod config | grep -q 'published:'; then
     fail "MODE=prod postgres compose must not publish host ports"
   fi
 fi

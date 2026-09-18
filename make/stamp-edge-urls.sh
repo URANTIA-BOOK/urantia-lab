@@ -107,17 +107,39 @@ stamp_owned_keys() {
     done
   fi
 
-  env_has_key "$env_file" EDGE_PUBLIC_URL && set_env_value "$env_file" EDGE_PUBLIC_URL "$origin"
-  env_has_key "$env_file" HUB_PUBLIC_URL && set_env_value "$env_file" HUB_PUBLIC_URL "$origin"
-  env_has_key "$env_file" NEXT_PUBLIC_HOST && set_env_value "$env_file" NEXT_PUBLIC_HOST "$origin"
-  env_has_key "$env_file" NEXTAUTH_URL && set_env_value "$env_file" NEXTAUTH_URL "$origin"
-  env_has_key "$env_file" API_PUBLIC_URL && set_env_value "$env_file" API_PUBLIC_URL "$api_url"
-  env_has_key "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST && set_env_value "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST "$api_url"
-  env_has_key "$env_file" EDGE_HOSTNAME && set_env_value "$env_file" EDGE_HOSTNAME "$hostname"
-  env_has_key "$env_file" EDGE_FORWARDED_PROTO && set_env_value "$env_file" EDGE_FORWARDED_PROTO "$proto"
-  env_has_key "$env_file" CADDY_HOST_MATCHERS && set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
-  env_has_key "$env_file" CADDY_HTTP_PORT && set_env_value "$env_file" CADDY_HTTP_PORT "$caddy_port"
-  env_has_key "$env_file" CADDY_API_PATH && set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
+  if env_has_key "$env_file" EDGE_PUBLIC_URL; then
+    set_env_value "$env_file" EDGE_PUBLIC_URL "$origin"
+  fi
+  if env_has_key "$env_file" HUB_PUBLIC_URL; then
+    set_env_value "$env_file" HUB_PUBLIC_URL "$origin"
+  fi
+  if env_has_key "$env_file" NEXT_PUBLIC_HOST; then
+    set_env_value "$env_file" NEXT_PUBLIC_HOST "$origin"
+  fi
+  if env_has_key "$env_file" NEXTAUTH_URL; then
+    set_env_value "$env_file" NEXTAUTH_URL "$origin"
+  fi
+  if env_has_key "$env_file" API_PUBLIC_URL; then
+    set_env_value "$env_file" API_PUBLIC_URL "$api_url"
+  fi
+  if env_has_key "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST; then
+    set_env_value "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST "$api_url"
+  fi
+  if env_has_key "$env_file" EDGE_HOSTNAME; then
+    set_env_value "$env_file" EDGE_HOSTNAME "$hostname"
+  fi
+  if env_has_key "$env_file" EDGE_FORWARDED_PROTO; then
+    set_env_value "$env_file" EDGE_FORWARDED_PROTO "$proto"
+  fi
+  if env_has_key "$env_file" CADDY_HOST_MATCHERS; then
+    set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
+  fi
+  if env_has_key "$env_file" CADDY_HTTP_PORT; then
+    set_env_value "$env_file" CADDY_HTTP_PORT "$caddy_port"
+  fi
+  if env_has_key "$env_file" CADDY_API_PATH; then
+    set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
+  fi
 }
 
 origin="$(strip_origin "$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)")"
