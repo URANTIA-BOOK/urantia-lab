@@ -4,6 +4,7 @@
 
 DEFAULT_EDGE_HOSTNAME="${DEFAULT_EDGE_HOSTNAME:-localhost}"
 DEFAULT_CADDY_API_PATH="${DEFAULT_CADDY_API_PATH:-/dev-api}"
+DEFAULT_CADDY_HTTP_PORT="${DEFAULT_CADDY_HTTP_PORT:-8080}"
 
 normalize_api_path() {
   local path="$1"
@@ -28,6 +29,45 @@ origin_scheme() {
     https://*) printf 'https' ;;
     *) printf 'http' ;;
   esac
+}
+
+valid_http_port() {
+  local port="$1"
+  [[ "$port" =~ ^[1-9][0-9]{0,4}$ ]] || return 1
+  ((port <= 65535))
+}
+
+choose_caddy_http_port() {
+  local current="${1:-}"
+  local existed="${2:-false}"
+  local suggested="$DEFAULT_CADDY_HTTP_PORT"
+
+  if [[ -n "${HTTP_PORT:-}" ]]; then
+    printf '%s' "$HTTP_PORT"
+    return
+  fi
+  if [[ -n "${CADDY_HTTP_PORT:-}" ]]; then
+    printf '%s' "$CADDY_HTTP_PORT"
+    return
+  fi
+
+  if [[ "$existed" == "true" && -n "$current" ]]; then
+    suggested="$current"
+  fi
+
+  if [[ -t 0 ]]; then
+    local value
+    read -r -p "Published port [${suggested}]: " value
+    value="${value:-$suggested}"
+    if ! valid_http_port "$value"; then
+      echo "Published port must be an integer 1-65535 (got '$value')." >&2
+      return 1
+    fi
+    printf '%s' "$value"
+    return
+  fi
+
+  printf '%s' "$suggested"
 }
 
 derive_edge_public_url() {
@@ -68,7 +108,7 @@ choose_edge_public_url() {
     local value
     read -r -p "Published hostname [${prompt_host}]: " value
     if [[ -z "$value" ]]; then
-      printf '%s' "$suggested"
+      derive_edge_public_url "$prompt_host" "$port"
       return
     fi
     if [[ "$value" =~ ^https?:// ]]; then

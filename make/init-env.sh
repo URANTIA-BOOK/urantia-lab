@@ -58,15 +58,12 @@ set_env_value "$SHARED_ENV_FILE" PAPERS_DATABASE_URL_HOST "postgres://$(read_env
 set_env_value "$SHARED_ENV_FILE" HUB_DATABASE_URL_HOST "postgres://$(read_env_value "$SHARED_ENV_FILE" POSTGRES_USER):$(read_env_value "$SHARED_ENV_FILE" POSTGRES_PASSWORD)@127.0.0.1:${host_port}/$(read_env_value "$SHARED_ENV_FILE" HUB_DB)"
 set_env_value "$SHARED_ENV_FILE" REDIS_URL_HOST "redis://:$(read_env_value "$SHARED_ENV_FILE" REDIS_PASSWORD)@127.0.0.1:${redis_port}"
 
-if [[ -n "${HTTP_PORT:-}" ]]; then
-  set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT "$HTTP_PORT"
-elif [[ -z "$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)" ]]; then
-  set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT \
-    "$(read_env_value "$SHARED_ENV_EXAMPLE" CADDY_HTTP_PORT)"
+caddy_port="$(choose_caddy_http_port "$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)" "$existed")"
+if ! valid_http_port "$caddy_port"; then
+  echo "Published port must be an integer 1-65535 (got '$caddy_port')." >&2
+  exit 1
 fi
-
-caddy_port="$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)"
-[[ -n "$caddy_port" ]] || caddy_port=8080
+set_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT "$caddy_port"
 
 api_path="$(choose_caddy_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)" "$existed")"
 set_env_value "$SHARED_ENV_FILE" CADDY_API_PATH "$api_path"

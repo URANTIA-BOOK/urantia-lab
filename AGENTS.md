@@ -14,7 +14,8 @@
   The narrow exception is a Caddy path-prefix edge (`stack/edge`) so one
   Cloudflare published route (`localhost:8080`) can reach the hub and the API.
   Browser traffic uses `EDGE_PUBLIC_URL` (default `http://localhost:8080`).
-  A TTY `make init` asks before a public hostname. Derived values:
+  A TTY `make init` asks for the published port (default `8080`), the papers
+  API path, and a hostname to expose. Derived values:
   `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`, `API_PUBLIC_URL`,
   `NEXT_PUBLIC_*`, `NEXTAUTH_URL`. Hub SSR stays on
   `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The papers API is mounted at

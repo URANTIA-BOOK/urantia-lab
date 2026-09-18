@@ -11,6 +11,12 @@ DEFAULT_COMPOSE_PROJECT_NAME := urantialab
 export SHARED_ENV_FILE
 export SHARED_ENV_EXAMPLE
 export COMPOSE_IGNORE_ORPHANS := true
+# Command-line overwrites must reach init-env.sh (`make init HTTP_PORT=9090`).
+export HTTP_PORT
+export CADDY_HTTP_PORT
+export CADDY_API_PATH
+export EDGE_PUBLIC_URL
+export EDGE_HOSTNAME
 
 PROJECT_NAME_ORIGIN := $(origin PROJECT_NAME)
 

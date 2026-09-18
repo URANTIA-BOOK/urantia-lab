@@ -26,13 +26,15 @@ A plain clone still works: `make init` runs `git submodule update --init --recur
 paper 1 is Foundation prose, not the English fallback.
 
 `make init` defaults the published origin to `http://localhost:8080`. On a TTY
-it asks for a hostname if you want to expose this copy. Hub/API/Next public
-URLs and `EDGE_FORWARDED_PROTO` are derived from that origin plus
-`CADDY_API_PATH` (default `/dev-api`). Caddy only serves `EDGE_HOSTNAME` and
-loopback; any other Host gets 404.
+it asks for the host port (default `8080`), the papers API path (default
+`/dev-api`), and a hostname if you want to expose this copy. Hub/API/Next
+public URLs and `EDGE_FORWARDED_PROTO` are derived from that origin plus
+`CADDY_API_PATH`. Caddy only serves `EDGE_HOSTNAME` and loopback; any other
+Host gets 404.
 
 ```bash
-make init                                          # localhost
+make init                                          # localhost:8080
+make init HTTP_PORT=9090
 make init EDGE_PUBLIC_URL=https://urantia.uklok.cloud
 make init CADDY_API_PATH=/dev-api HTTP_PORT=8080
 ```
