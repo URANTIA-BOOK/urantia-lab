@@ -64,7 +64,7 @@ choose_edge_public_url() {
     local prompt_host
     prompt_host="$(origin_hostname "$suggested")"
     [[ -n "$prompt_host" ]] || prompt_host="$DEFAULT_EDGE_HOSTNAME"
-    echo "Published origin defaults to localhost. Enter a hostname to expose this copy."
+    echo "Published origin defaults to localhost. Enter a hostname to expose this copy." >&2
     local value
     read -r -p "Published hostname [${prompt_host}]: " value
     if [[ -z "$value" ]]; then

@@ -87,6 +87,7 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(HUB_DIR) validate
 	@$(STACK_MAKE) -C $(EDGE_DIR) validate
 	@./make/test-edge-urls.sh
+	@./make/test-edge-origin.sh
 	@./make/test-prod-mode.sh
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
