@@ -25,8 +25,18 @@ out="$(choose_caddy_api_path "" false)"
 
 out="$(choose_caddy_http_port "" false)"
 [[ "$out" == "8080" ]] || fail "non-TTY published port must be 8080 (got '$out')"
-out="$(HTTP_PORT=9090 choose_caddy_http_port "8080" true)"
+out="$(choose_caddy_http_port "9080" true)"
+[[ "$out" == "9080" ]] || fail "stored port must be kept (got '$out')"
+out="$(HTTP_PORT=9090 choose_caddy_http_port "9080" true)"
 [[ "$out" == "9090" ]] || fail "HTTP_PORT must win over a stored port (got '$out')"
+
+out="$(existing_env_choice "" "9080" true)"
+[[ "$out" == "9080" ]] || fail "existing_env_choice must keep a written value (got '$out')"
+out="$(existing_env_choice "9090" "9080" true)"
+[[ "$out" == "9090" ]] || fail "existing_env_choice overwrite must win (got '$out')"
+if existing_env_choice "" "" true; then
+  fail "existing_env_choice must miss when nothing is written"
+fi
 
 tmp="$(mktemp)"
 trap 'rm -f "$tmp"' EXIT
@@ -98,14 +108,14 @@ if "Published port" not in out:
     sys.exit("interactive init must ask for Published port")
 print("init-env TTY: port 9090 + /v1 + localhost stamps a single-line origin")
 
-# Re-init (existing .env.shared) skips the project name, still asks for port,
-# and restamps localhost from that port when the hostname is left empty.
+# Re-init (existing .env.shared, same path as make up → init) keeps the file.
+# A TTY must not interview again.
 existed = tmpdir / ".env.existed"
 existed.write_text(
     "COMPOSE_PROJECT_NAME=urantialab\n"
-    "CADDY_HTTP_PORT=8080\n"
-    "CADDY_API_PATH=/dev-api\n"
-    "EDGE_PUBLIC_URL=http://localhost:8080\n"
+    "CADDY_HTTP_PORT=9080\n"
+    "CADDY_API_PATH=/v1\n"
+    "EDGE_PUBLIC_URL=http://localhost:9080\n"
     "POSTGRES_USER=urantia\n"
     "POSTGRES_PASSWORD=testpass\n"
     "POSTGRES_DB=papers\n"
@@ -120,7 +130,6 @@ pid, fd = pty.fork()
 if pid == 0:
     os.chdir(root)
     os.execv(str(script), [str(script)])
-os.write(fd, b"9090\n/v1\n\n")
 chunks = []
 while True:
     try:
@@ -133,19 +142,23 @@ while True:
 os.waitpid(pid, 0)
 re_out = b"".join(chunks).decode("utf-8", "replace")
 re_text = existed.read_text()
-if "Published port" not in re_out:
+for prompt in ("Published port", "Papers API path", "Published hostname", "Compose project name"):
+    if prompt in re_out:
+        sys.stderr.write(re_out + "\n")
+        sys.exit(f"re-init TTY must not ask {prompt} when the file already has it")
+if "CADDY_HTTP_PORT=9080" not in re_text:
     sys.stderr.write(re_out + "\n")
-    sys.exit("re-init TTY must ask for Published port")
-if "CADDY_HTTP_PORT=9090" not in re_text:
+    sys.exit("re-init must keep the stored published port")
+if "EDGE_PUBLIC_URL=http://localhost:9080\n" not in re_text:
     sys.stderr.write(re_out + "\n")
-    sys.exit("re-init TTY must persist Published port 9090")
-if "EDGE_PUBLIC_URL=http://localhost:9090\n" not in re_text:
+    sys.exit("re-init must keep the stored localhost origin")
+if "API_PUBLIC_URL=http://localhost:9080/v1" not in re_text:
     sys.stderr.write(re_out + "\n")
-    sys.exit("re-init empty hostname must restamp localhost from the chosen port")
-if "API_PUBLIC_URL=http://localhost:9090/v1" not in re_text:
+    sys.exit("re-init must keep the stored API path on the stored origin")
+if "Lab identity" not in re_out:
     sys.stderr.write(re_out + "\n")
-    sys.exit("re-init must derive API_PUBLIC_URL from port + /v1")
-print("init-env re-init TTY: Published port 9090 restamps localhost")
+    sys.exit("re-init TTY must finish without reading stdin")
+print("init-env re-init TTY: existing file is kept, no interview")
 PY
 
 echo "edge-origin: chooser stdout is a URL; /v1 survives init"

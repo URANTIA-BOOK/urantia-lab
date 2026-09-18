@@ -25,12 +25,16 @@ A plain clone still works: `make init` runs `git submodule update --init --recur
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
 
-`make init` defaults the published origin to `http://localhost:8080`. On a TTY
-it asks for the host port (default `8080`), the papers API path (default
-`/dev-api`), and a hostname if you want to expose this copy. Hub/API/Next
-public URLs and `EDGE_FORWARDED_PROTO` are derived from that origin plus
-`CADDY_API_PATH`. Caddy only serves `EDGE_HOSTNAME` and loopback; any other
-Host gets 404.
+`make init` writes `.env.shared` once. The first TTY write asks for the host
+port (default `8080`), the papers API path (default `/dev-api`), and a
+hostname if you want to expose this copy. Later `make init` and `make up`
+keep those values and restamp derived URLs. Change a stored key with a
+Make-time overwrite (`HTTP_PORT`, `CADDY_API_PATH`, `EDGE_PUBLIC_URL`),
+not by answering prompts again. Hub/API/Next public URLs and
+`EDGE_FORWARDED_PROTO` follow that origin plus `CADDY_API_PATH`. A localhost
+origin stays on `CADDY_HTTP_PORT`; a public hostname does not (that bind is
+the tunnel target). Caddy only serves `EDGE_HOSTNAME` and loopback; any
+other Host gets 404.
 
 ```bash
 make init                                          # localhost:8080

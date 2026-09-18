@@ -1,6 +1,10 @@
 # Published origin: localhost by default. A public hostname is opt-in.
-# Derived values are stamped by stamp-edge-urls.sh from EDGE_PUBLIC_URL
-# + CADDY_API_PATH. Do not read the process HOSTNAME (that is the machine).
+# First write interviews. Later make init / make up keep .env.shared
+# (existing_env_choice). stamp-edge-urls.sh derives browser URLs from
+# EDGE_PUBLIC_URL + CADDY_API_PATH and keeps a localhost origin on the
+# bind port. Do not read the process HOSTNAME (that is the machine).
+# shellcheck source=env-utils.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-utils.sh"
 
 DEFAULT_EDGE_HOSTNAME="${DEFAULT_EDGE_HOSTNAME:-localhost}"
 DEFAULT_CADDY_API_PATH="${DEFAULT_CADDY_API_PATH:-/dev-api}"
@@ -41,22 +45,14 @@ choose_caddy_http_port() {
   local current="${1:-}"
   local existed="${2:-false}"
   local suggested="$DEFAULT_CADDY_HTTP_PORT"
+  local chosen value
 
-  if [[ -n "${HTTP_PORT:-}" ]]; then
-    printf '%s' "$HTTP_PORT"
+  if chosen="$(existing_env_choice "${HTTP_PORT:-${CADDY_HTTP_PORT:-}}" "$current" "$existed")"; then
+    printf '%s' "$chosen"
     return
-  fi
-  if [[ -n "${CADDY_HTTP_PORT:-}" ]]; then
-    printf '%s' "$CADDY_HTTP_PORT"
-    return
-  fi
-
-  if [[ "$existed" == "true" && -n "$current" ]]; then
-    suggested="$current"
   fi
 
   if [[ -t 0 ]]; then
-    local value
     read -r -p "Published port [${suggested}]: " value
     value="${value:-$suggested}"
     if ! valid_http_port "$value"; then
@@ -85,27 +81,25 @@ choose_edge_public_url() {
   local existed="${2:-false}"
   local port="${3:-8080}"
   local suggested="http://localhost:${port}"
+  local chosen value prompt_host
 
   if [[ -n "${EDGE_PUBLIC_URL:-}" ]]; then
     printf '%s' "${EDGE_PUBLIC_URL%/}"
     return
   fi
-
   if [[ -n "${EDGE_HOSTNAME:-}" ]]; then
     derive_edge_public_url "$EDGE_HOSTNAME" "$port"
     return
   fi
-
-  if [[ "$existed" == "true" && -n "$current" ]]; then
-    suggested="${current%/}"
+  if chosen="$(existing_env_choice "" "$current" "$existed")"; then
+    printf '%s' "${chosen%/}"
+    return
   fi
 
   if [[ -t 0 ]]; then
-    local prompt_host
     prompt_host="$(origin_hostname "$suggested")"
     [[ -n "$prompt_host" ]] || prompt_host="$DEFAULT_EDGE_HOSTNAME"
     echo "Published origin defaults to localhost. Enter a hostname to expose this copy." >&2
-    local value
     read -r -p "Published hostname [${prompt_host}]: " value
     if [[ -z "$value" ]]; then
       derive_edge_public_url "$prompt_host" "$port"
@@ -126,18 +120,18 @@ choose_caddy_api_path() {
   local current="${1:-}"
   local existed="${2:-false}"
   local suggested="$DEFAULT_CADDY_API_PATH"
+  local chosen value
 
   if [[ -n "${CADDY_API_PATH:-}" ]]; then
     normalize_api_path "$CADDY_API_PATH"
     return
   fi
-
-  if [[ "$existed" == "true" && -n "$current" ]]; then
-    suggested="$(normalize_api_path "$current")"
+  if chosen="$(existing_env_choice "" "$current" "$existed")"; then
+    normalize_api_path "$chosen"
+    return
   fi
 
   if [[ -t 0 ]]; then
-    local value
     read -r -p "Papers API path [${suggested}]: " value
     if [[ -z "$value" ]]; then
       printf '%s' "$suggested"

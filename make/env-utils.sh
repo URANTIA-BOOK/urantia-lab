@@ -66,3 +66,22 @@ ensure_secret() {
     set_env_value "$file" "$key" "$(openssl rand -hex 24)"
   fi
 }
+
+# Identity keys (project name, port, API path, origin) are written once.
+# Later `make init` / `make up` keep the file. A Make-time env overwrite is
+# the only way to change a stored key. Return 0 with the value on stdout,
+# or 1 so the caller can interview (first TTY write) or default.
+existing_env_choice() {
+  local overwrite="${1:-}"
+  local current="${2:-}"
+  local existed="${3:-false}"
+  if [[ -n "$overwrite" ]]; then
+    printf '%s' "$overwrite"
+    return 0
+  fi
+  if [[ "$existed" == "true" && -n "$current" ]]; then
+    printf '%s' "$current"
+    return 0
+  fi
+  return 1
+}

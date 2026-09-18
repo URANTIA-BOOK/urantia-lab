@@ -76,9 +76,17 @@ grep -qx "CADDY_API_PATH=/v1" "$tmp" || fail "CADDY_API_PATH env must win"
 grep -qx "API_PUBLIC_URL=http://localhost:8080/v1" "$tmp" \
   || fail "API_PUBLIC_URL must follow CADDY_API_PATH"
 
-HTTP_PORT=9090 EDGE_PUBLIC_URL=http://localhost:9090 \
+HTTP_PORT=9090 \
   SHARED_ENV_FILE="$tmp" "$ROOT/make/init-env.sh" >/dev/null
 grep -qx "CADDY_HTTP_PORT=9090" "$tmp" || fail "HTTP_PORT must stamp CADDY_HTTP_PORT"
+grep -qx "EDGE_PUBLIC_URL=http://localhost:9090" "$tmp" \
+  || fail "localhost origin must follow HTTP_PORT overwrite"
+
+HTTP_PORT=9090 EDGE_PUBLIC_URL=https://urantia.uklok.cloud \
+  SHARED_ENV_FILE="$kept" "$ROOT/make/init-env.sh" >/dev/null
+grep -qx "CADDY_HTTP_PORT=9090" "$kept" || fail "HTTP_PORT must stamp a public copy's bind port"
+grep -qx "EDGE_PUBLIC_URL=https://urantia.uklok.cloud" "$kept" \
+  || fail "public origin must stay when only the bind port changes"
 
 make_port="$(printf 'probe:\n\t@printf %%s "$$HTTP_PORT"\n' \
   | make -f "$ROOT/make/project.mk" -f - HTTP_PORT=9090 probe)"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Stamp public hub/API origins from EDGE_PUBLIC_URL + CADDY_API_PATH.
+# A localhost / 127.0.0.1 origin follows CADDY_HTTP_PORT. A public host
+# does not (the bind port is the tunnel target, not the browser origin).
 # Browser traffic uses the published edge; hub SSR stays on
 # URANTIA_DEV_API_INTERNAL_HOST=http://api:3000 (Compose, not this file).
 set -euo pipefail
@@ -39,6 +41,7 @@ stamp_file() {
   local hostname="$4"
   local proto="$5"
 
+  set_env_value "$env_file" EDGE_PUBLIC_URL "$origin"
   set_env_value "$env_file" HUB_PUBLIC_URL "$origin"
   set_env_value "$env_file" NEXT_PUBLIC_HOST "$origin"
   set_env_value "$env_file" NEXTAUTH_URL "$origin"
@@ -59,10 +62,15 @@ if ! valid_origin "$origin"; then
   exit 1
 fi
 
-api_path="$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
-api_url="$(join_origin_path "$origin" "$api_path")"
 hostname="$(origin_hostname "$origin")"
 [[ -n "$hostname" ]] || hostname="$DEFAULT_EDGE_HOSTNAME"
+caddy_port="$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)"
+if valid_http_port "$caddy_port" && { [[ "$hostname" == "localhost" ]] || [[ "$hostname" == "127.0.0.1" ]]; }; then
+  origin="$(derive_edge_public_url "$hostname" "$caddy_port")"
+fi
+
+api_path="$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
+api_url="$(join_origin_path "$origin" "$api_path")"
 proto="$(origin_scheme "$origin")"
 
 targets=("$SHARED_ENV_FILE")

@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # Resolve the Compose project identity used to isolate containers, volumes, and networks.
 # Precedence:
-#   1. PROJECT_NAME when PROJECT_NAME_OVERRIDE=1
-#   2. COMPOSE_PROJECT_NAME from .env.shared
-#   3. urantialab
+#   1. PROJECT_NAME (Make overwrite)
+#   2. COMPOSE_PROJECT_NAME already in .env.shared
+#   3. first-write interview / urantialab
+# shellcheck source=env-utils.sh
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/env-utils.sh"
 
 DEFAULT_COMPOSE_PROJECT_NAME="${DEFAULT_COMPOSE_PROJECT_NAME:-urantialab}"
 
@@ -36,16 +38,12 @@ choose_compose_project_name() {
   local current="${1:-}"
   local existed="${2:-false}"
   local suggested="${current:-$DEFAULT_COMPOSE_PROJECT_NAME}"
-  local value
+  local value chosen
 
   [[ -n "$suggested" ]] || suggested="$DEFAULT_COMPOSE_PROJECT_NAME"
 
-  if [[ -n "${PROJECT_NAME:-}" ]]; then
-    printf '%s' "$PROJECT_NAME"
-    return
-  fi
-  if [[ "$existed" == "true" && -n "$current" ]]; then
-    printf '%s' "$current"
+  if chosen="$(existing_env_choice "${PROJECT_NAME:-}" "$current" "$existed")"; then
+    printf '%s' "$chosen"
     return
   fi
   if [[ -t 0 ]]; then

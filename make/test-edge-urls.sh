@@ -47,6 +47,19 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" NEXT_PUBLIC_URANTIA_DEV_API
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_HOSTNAME)" 'localhost' "local EDGE_HOSTNAME"
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'http' "local forwarded proto"
 
+write_shared 'http://localhost:8080'
+set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
+run_stamp
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_PUBLIC_URL)" 'http://localhost:9080' "localhost origin follows CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" HUB_PUBLIC_URL)" 'http://localhost:9080' "localhost hub follows CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'http://localhost:9080/dev-api' "localhost API follows CADDY_HTTP_PORT"
+
+write_shared 'https://urantia.uklok.cloud'
+set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
+run_stamp
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_PUBLIC_URL)" 'https://urantia.uklok.cloud' "public origin ignores bind port"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" HUB_PUBLIC_URL)" 'https://urantia.uklok.cloud' "public hub ignores bind port"
+
 write_shared 'https://urantia.uklok.cloud/'
 run_stamp
 assert_eq "$(read_env_value "$stamp_dir/.env.shared" HUB_PUBLIC_URL)" 'https://urantia.uklok.cloud' "public hub strips trailing slash"

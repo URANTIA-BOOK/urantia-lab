@@ -18,11 +18,12 @@ only the lab contract.
 
 1. `stack/edge` is the Caddy stack. `make up` includes `edge-up` last.
    Caddy joins `apps` only.
-2. `make init` defaults `EDGE_PUBLIC_URL` to `http://localhost:8080`. On a TTY
-   it asks for the published port (default `8080`), the papers API path
-   (default `/dev-api`), and a hostname to expose. `HTTP_PORT` /
-   `CADDY_HTTP_PORT` and `CADDY_API_PATH` are env overwrites.
-   `make/stamp-edge-urls.sh` derives
+2. `make init` writes `.env.shared` once. The first TTY write asks for the
+   published port (default `8080`), the papers API path (default `/dev-api`),
+   and a hostname to expose. Later `make init` / `make up` keep the file
+   (`existing_env_choice`). `HTTP_PORT` / `CADDY_HTTP_PORT` / `CADDY_API_PATH`
+   / `EDGE_PUBLIC_URL` are the overwrite doors. `make/stamp-edge-urls.sh`
+   keeps a localhost origin on `CADDY_HTTP_PORT` and derives
    `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`,
    `NEXT_PUBLIC_HOST`, `NEXTAUTH_URL`, `API_PUBLIC_URL`, and
    `NEXT_PUBLIC_URANTIA_DEV_API_HOST`.
