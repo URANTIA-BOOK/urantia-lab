@@ -15,7 +15,8 @@ review traffic hit `next start` / `bun start`, not hot reload.
 2. Hub command is `yarn build && yarn start`. API command is `bun run start`.
    Caddy on `:8080` is the only published ingress.
 3. Run `make verify`. Do not `make down` and do not kill the modules.
-4. `MODE=dev` is only for an in-turn edit that needs `yarn dev` / `bun --hot`.
-   Flip back to prod before you finish.
+4. `make dev-up` (`MODE=dev`) is only for an in-turn edit that needs
+   `yarn dev` / `bun --hot` or diagnostic host ports. Flip back to
+   `make up` before you finish.
 
 Do not point the Cloudflare tunnel at hub or API host ports.

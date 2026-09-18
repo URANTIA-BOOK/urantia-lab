@@ -11,15 +11,10 @@ DEFAULT_COMPOSE_PROJECT_NAME := urantialab
 export SHARED_ENV_FILE
 export SHARED_ENV_EXAMPLE
 export COMPOSE_IGNORE_ORPHANS := true
-# Command-line / environment overwrites are already exported by Make.
-# Do not `export CADDY_HTTP_PORT` here when unset: an empty value pins
-# ${CADDY_HTTP_PORT:-8080} to 8080 and ignores .env.shared.
 
 PROJECT_NAME_ORIGIN := $(origin PROJECT_NAME)
 
 COMPOSE_PROJECT_NAME_FILE := $(shell test -f "$(SHARED_ENV_FILE)" && sed -n 's/^COMPOSE_PROJECT_NAME=//p' "$(SHARED_ENV_FILE)" | tail -n 1)
-CADDY_HTTP_PORT_FILE := $(shell test -f "$(SHARED_ENV_FILE)" && sed -n 's/^CADDY_HTTP_PORT=//p' "$(SHARED_ENV_FILE)" | tail -n 1)
-CADDY_API_PATH_FILE := $(shell test -f "$(SHARED_ENV_FILE)" && sed -n 's/^CADDY_API_PATH=//p' "$(SHARED_ENV_FILE)" | tail -n 1)
 
 ifeq ($(filter command line environment,$(PROJECT_NAME_ORIGIN)),)
   PROJECT_NAME_OVERRIDE :=

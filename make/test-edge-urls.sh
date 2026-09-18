@@ -84,12 +84,31 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'https://u
 
 write_shared 'https://urantia.uklok.cloud'
 set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9180
-printf 'CADDY_HTTP_PORT=8080\nAPI_PUBLIC_URL=http://example.invalid\nIGNORED=keep\n' >"$stamp_dir/extra.env"
-run_stamp "$stamp_dir/extra.env"
-assert_eq "$(read_env_value "$stamp_dir/extra.env" API_PUBLIC_URL)" 'https://urantia.uklok.cloud/dev-api' "extra file with API_PUBLIC_URL is stamped"
-assert_eq "$(read_env_value "$stamp_dir/extra.env" CADDY_HTTP_PORT)" '9180' \
-  "stack .env must take CADDY_HTTP_PORT from shared, not the example 8080"
-assert_eq "$(read_env_value "$stamp_dir/extra.env" IGNORED)" 'keep' "unrelated extra keys stay"
+stack_dir="$stamp_dir/stack"
+mkdir -p "$stack_dir"
+printf 'COMPOSE_PROJECT_NAME=urantialab\n' >"$stack_dir/.env.example"
+printf 'COMPOSE_PROJECT_NAME=urantialab\nCADDY_HTTP_PORT=8080\nHUB_PUBLIC_URL=http://example.invalid\nAPI_PUBLIC_URL=http://example.invalid\nIGNORED=keep\n' >"$stack_dir/.env"
+run_stamp "$stack_dir/.env"
+assert_eq "$(read_env_value "$stack_dir/.env" IGNORED)" 'keep' "unrelated stack keys stay"
+assert_eq "$(read_env_value "$stack_dir/.env" COMPOSE_PROJECT_NAME)" 'urantialab' "stack Compose name stays"
+assert_eq "$(read_env_value "$stack_dir/.env" CADDY_HTTP_PORT)" '' \
+  "stack .env must not keep a second CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stack_dir/.env" HUB_PUBLIC_URL)" '' \
+  "stack .env must not keep a second HUB_PUBLIC_URL"
+assert_eq "$(read_env_value "$stack_dir/.env" API_PUBLIC_URL)" '' \
+  "stack .env must not keep a second API_PUBLIC_URL"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT)" '9180' \
+  "shared keeps the bind port"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'https://urantia.uklok.cloud/dev-api' \
+  "shared keeps the derived API origin"
+
+owned_dir="$stamp_dir/owned"
+mkdir -p "$owned_dir"
+printf 'API_PUBLIC_URL=\n' >"$owned_dir/.env.example"
+printf 'API_PUBLIC_URL=http://example.invalid\n' >"$owned_dir/.env"
+run_stamp "$owned_dir/.env"
+assert_eq "$(read_env_value "$owned_dir/.env" API_PUBLIC_URL)" 'https://urantia.uklok.cloud/dev-api' \
+  "a file whose example owns API_PUBLIC_URL is stamped"
 
 write_shared ''
 printf 'HUB_PUBLIC_URL=http://127.0.0.1:3001\nAPI_PUBLIC_URL=http://127.0.0.1:3000\n' >"$stamp_dir/.env.shared"

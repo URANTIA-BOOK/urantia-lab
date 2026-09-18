@@ -26,10 +26,10 @@ only the lab contract.
    tests must not interview just because stdin is a TTY. `HTTP_PORT` /
    `CADDY_HTTP_PORT` / `CADDY_API_PATH` / `EDGE_PUBLIC_URL` overwrite.
    `make/stamp-edge-urls.sh` keeps a localhost origin on `CADDY_HTTP_PORT`
-   and derives
-   `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`,
-   `NEXT_PUBLIC_HOST`, `NEXTAUTH_URL`, `API_PUBLIC_URL`, and
-   `NEXT_PUBLIC_URANTIA_DEV_API_HOST`.
+   and derives those public keys onto `.env.shared` only. A stack `.env`
+   is stamped only for keys its `.env.example` already owns; leftover
+   identity copies are stripped. Compose interpolates `CADDY_HTTP_PORT`
+   from `--env-file .env.shared`. Do not pin that key on `COMPOSE :=`.
 3. Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. Rebuild
    the hub image after a public-URL stamp; `NEXT_PUBLIC_*` bake in at
    `docker build`. Caddy host-matches `CADDY_HOST_MATCHERS` (unique
@@ -41,10 +41,11 @@ only the lab contract.
 5. `make verify` probes `127.0.0.1:$CADDY_HTTP_PORT` and the stamped public
    URLs. `make review` is still the human language gate.
 6. Close the turn on `MODE=prod` (hub `yarn start`, API `bun run start`).
-   `MODE=dev` is only for in-turn hot reload. See
-   `.cursor/rules/staging-prod-mode.mdc`.
-7. `./make/test-edge-urls.sh` and `./make/test-prod-mode.sh` run from
-   `make validate`.
+   `make dev-up` / `MODE=dev` is the overlay door (hot reload and
+   diagnostic host ports from `.env.shared`). Flip back to `make up`
+   before you finish. See `.cursor/rules/staging-prod-mode.mdc`.
+7. `./make/test-edge-urls.sh`, `./make/test-prod-mode.sh`, and
+   `./make/test-dev-mode.sh` run from `make validate`.
 8. Do not claim `make up` from this checkout. Detach a worktree at
    `HEAD` (`git worktree add --detach` — the same branch cannot be
    checked out twice), `git submodule update --init --recursive`,

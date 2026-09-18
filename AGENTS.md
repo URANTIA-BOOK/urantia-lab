@@ -8,24 +8,32 @@
   `data-sources/`), pinned to URANTIA-BOOK `main`. Nested pipeline language
   trees initialize recursively. Do not restore a UKLOK_ROOT sibling layout.
 - Lab default is `MODE=prod` (`next start` / `bun start`, Caddy only).
-  `MODE=dev` is hot-reload plus diagnostic ports. Close every turn on prod
-  so the Cloudflare origin matches staging (`.cursor/rules/staging-prod-mode.mdc`).
+  `MODE=dev` is the overlay door (`make dev-up` / `make postgres-up MODE=dev`):
+  hot-reload plus diagnostic host ports from `docker-compose.dev.yml`.
+  Close every turn on prod so the Cloudflare origin matches staging
+  (`.cursor/rules/staging-prod-mode.mdc`).
   Do not import Wealth's Hasura, Auth0, or Portainer.
   The narrow exception is a Caddy path-prefix edge (`stack/edge`) so one
   Cloudflare published route (`localhost:8080`) can reach the hub and the API.
-  Browser traffic uses `EDGE_PUBLIC_URL` (default `http://localhost:8080`).
-  The first TTY `make init` asks for the published port (default `8080`),
-  the papers API path, and a hostname to expose. Later `make init` /
-  `make up` keep `.env.shared`. Make-time `HTTP_PORT` / `CADDY_API_PATH` /
-  `EDGE_PUBLIC_URL` overwrite a stored key. Derived values:
-  `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`, `HUB_PUBLIC_URL`, `API_PUBLIC_URL`,
-  `NEXT_PUBLIC_*`, `NEXTAUTH_URL`. Hub SSR stays on
-  `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The papers API is mounted at
-  `CADDY_API_PATH` (default `/dev-api`) because the hub already owns `/api`.
-  Caddy `:80` host-matches `CADDY_HOST_MATCHERS` (unique `EDGE_HOSTNAME`
-  plus loopback; localhost as the hostname must not repeat).
-  Prod compose builds `hub/Dockerfile` and `api/Dockerfile` and bind-mounts
-  book trees only. Module onboarding is each repo's `.devcontainer`.
+  `.env.shared` is the only identity file. `make/stamp-edge-urls.sh` writes a
+  key only if that file already owns it (stack `.env.example` is the owner
+  list) and strips leftover identity copies. Compose interpolates
+  `CADDY_HTTP_PORT` and `POSTGRES_HOST_PORT` from `--env-file .env.shared`.
+  Do not pin those keys on `COMPOSE :=` and do not copy them onto stack
+  `.env` files. Browser traffic uses `EDGE_PUBLIC_URL` (default
+  `http://localhost:8080`). The first TTY `make init` asks for the published
+  port (default `8080`), the papers API path, and a hostname to expose.
+  Later `make init` / `make up` keep `.env.shared`. Make-time `HTTP_PORT` /
+  `CADDY_API_PATH` / `EDGE_PUBLIC_URL` overwrite a stored key. Derived
+  values stay on `.env.shared`: `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`,
+  `HUB_PUBLIC_URL`, `API_PUBLIC_URL`, `NEXT_PUBLIC_*`, `NEXTAUTH_URL`.
+  Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The
+  papers API is mounted at `CADDY_API_PATH` (default `/dev-api`) because the
+  hub already owns `/api`. Caddy `:80` host-matches `CADDY_HOST_MATCHERS`
+  (unique `EDGE_HOSTNAME` plus loopback; localhost as the hostname must not
+  repeat). Prod compose builds `hub/Dockerfile` and `api/Dockerfile` and
+  bind-mounts book trees only. Module onboarding is each repo's
+  `.devcontainer`.
 - Audio stays on the public CDN for this train.
 - Official Foundation trees supersede AI translations. Overlay `spa/fre/ger`
   as API `es/fr/de`.
@@ -33,9 +41,10 @@
 ## Operating contract
 
 - The root Makefile is the door: `init` writes identity (interviews once),
-  `validate` is compose config plus contract tests, `up` starts the stacks.
-  `up` does not run `validate`. `seed`, `seed-lang`, `verify`, `review`,
-  `down`, `destroy` stay lifecycle doors.
+  `validate` is compose config plus contract tests, `up` starts the stacks
+  in prod, `dev-up` applies the development overlays. `up` does not run
+  `validate`. `seed`, `seed-lang`, `verify`, `review`, `down`, `dev-down`,
+  `destroy` stay lifecycle doors.
 - End every turn with `make up` (prod) and `make verify`. Do not leave
   `yarn dev` or `bun --hot` serving the published origin.
 - `COMPOSE_PROJECT_NAME` in `.env.shared` isolates containers, volumes, and

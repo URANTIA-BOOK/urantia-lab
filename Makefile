@@ -25,6 +25,7 @@ DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 .PHONY: help check-docker submodules check-siblings init env-check network validate \
 	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
+	dev-up dev-down \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
 	edge-up edge-down
 
@@ -40,9 +41,11 @@ help:
 	@echo ""
 	@echo "  make init               Submodules + name this copy + local secrets"
 	@echo "  make submodules         git submodule update --init --recursive"
-	@echo "  make validate           Compose model + contract tests"
+	@echo "  make validate           Compose model + contract tests (prod)"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
-	@echo "  make up                 Start Postgres + Redis + API + hub + edge"
+	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make dev-up             Watch-mode overlays + diagnostic host ports"
+	@echo "  make dev-down           Stop the development overlays"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
@@ -80,6 +83,7 @@ env-check:
 network: check-docker
 	@$(PROJECT_NAME_ENV) ./make/ensure-networks.sh
 
+validate: MODE=prod
 validate: init network check-siblings
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) validate
 	@$(STACK_MAKE) -C $(REDIS_DIR) validate
@@ -89,6 +93,7 @@ validate: init network check-siblings
 	@./make/test-edge-urls.sh
 	@./make/test-edge-origin.sh
 	@./make/test-prod-mode.sh
+	@./make/test-dev-mode.sh
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
 	@./make/test-init-env.sh
@@ -98,6 +103,7 @@ validate: init network check-siblings
 validate-dev:
 	@$(MAKE) validate MODE=dev
 
+up: MODE=prod
 up: init network check-siblings
 	@set -e; for target in $(DEFAULT_UP_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE); \
@@ -105,12 +111,19 @@ up: init network check-siblings
 	@echo "Lab is up. Hub $$(sed -n 's/^HUB_PUBLIC_URL=//p' $(SHARED_ENV_FILE))  API $$(sed -n 's/^API_PUBLIC_URL=//p' $(SHARED_ENV_FILE))"
 	@echo "Next: make seed && make verify && make review"
 
+down: MODE=prod
 down:
 	@set -e; for target in $(DEFAULT_DOWN_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE) || true; \
 	done
 
 restart: down up
+
+dev-up:
+	@$(MAKE) up MODE=dev
+
+dev-down:
+	@$(MAKE) down MODE=dev
 
 destroy:
 	@$(PROJECT_NAME_ENV) CONFIRM=$(CONFIRM) ./make/destroy.sh

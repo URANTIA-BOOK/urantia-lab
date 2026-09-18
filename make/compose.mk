@@ -31,11 +31,11 @@ else
 WAIT_TIMEOUT ?= 60
 endif
 
+# Interpolation comes from --env-file ACTIVE then --env-file SHARED.
+# Do not pin identity keys on this line: an empty Make export shadows .env.shared.
 COMPOSE := COMPOSE_PROJECT_NAME=$(PROJECT_NAME) COMPOSE_IGNORE_ORPHANS=true \
 	API_ROOT=$(API_ROOT) HUB_ROOT=$(HUB_ROOT) PIPELINE_ROOT=$(PIPELINE_ROOT) \
 	SHARED_ENV_FILE=$(SHARED_ENV_FILE) \
-	CADDY_HTTP_PORT=$(or $(CADDY_HTTP_PORT),$(CADDY_HTTP_PORT_FILE),8080) \
-	CADDY_API_PATH=$(or $(CADDY_API_PATH),$(CADDY_API_PATH_FILE),/dev-api) \
 	$(DOCKER_COMPOSE) \
 	--project-name $(PROJECT_NAME) \
 	--env-file $(ACTIVE_ENV_FILE) \

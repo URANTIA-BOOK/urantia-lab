@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Stamp public hub/API origins from EDGE_PUBLIC_URL + CADDY_API_PATH.
+# Derive public hub/API origins from EDGE_PUBLIC_URL + CADDY_API_PATH.
+# .env.shared is the only identity file. Stack .env files keep only the
+# keys they already own (Wealth stamp-app-urls). Compose interpolates
+# CADDY_HTTP_PORT and diagnostic host ports from --env-file .env.shared.
 # A localhost / 127.0.0.1 origin follows CADDY_HTTP_PORT. A public host
 # does not (the bind port is the tunnel target, not the browser origin).
-# Compose interpolates stack/.env for `ports:`, so CADDY_HTTP_PORT is
-# copied onto every stamped file or the edge keeps publishing 8080.
-# Browser traffic uses the published edge; hub SSR stays on
-# URANTIA_DEV_API_INTERNAL_HOST=http://api:3000 (Compose, not this file).
+# Hub SSR stays on URANTIA_DEV_API_INTERNAL_HOST=http://api:3000.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -16,6 +16,38 @@ source "$SCRIPT_DIR/env-utils.sh"
 source "$SCRIPT_DIR/edge-origin.sh"
 
 SHARED_ENV_FILE="${SHARED_ENV_FILE:-$REPOSITORY_ROOT/.env.shared}"
+
+# Keys that live on .env.shared. A stack .env must not grow a second copy.
+SHARED_IDENTITY_KEYS=(
+  EDGE_PUBLIC_URL
+  HUB_PUBLIC_URL
+  NEXT_PUBLIC_HOST
+  NEXTAUTH_URL
+  API_PUBLIC_URL
+  NEXT_PUBLIC_URANTIA_DEV_API_HOST
+  EDGE_HOSTNAME
+  EDGE_FORWARDED_PROTO
+  CADDY_HOST_MATCHERS
+  CADDY_HTTP_PORT
+  CADDY_API_PATH
+  POSTGRES_HOST_PORT
+  REDIS_HOST_PORT
+  API_HOST_PORT
+  HUB_HOST_PORT
+)
+
+env_has_key() {
+  local env_file="$1"
+  local key="$2"
+  grep -q "^${key}=" "$env_file" 2>/dev/null
+}
+
+same_file() {
+  local left="$1"
+  local right="$2"
+  [[ -f "$left" && -f "$right" ]] || return 1
+  [[ "$(realpath "$left")" == "$(realpath "$right")" ]]
+}
 
 strip_origin() {
   local origin="$1"
@@ -36,7 +68,7 @@ valid_origin() {
   [[ "$url" =~ ^https?://[^[:space:]]+$ ]]
 }
 
-stamp_file() {
+write_derived() {
   local env_file="$1"
   local origin="$2"
   local api_url="$3"
@@ -55,6 +87,37 @@ stamp_file() {
   set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
   set_env_value "$env_file" CADDY_HTTP_PORT "$caddy_port"
   set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
+}
+
+stamp_owned_keys() {
+  local env_file="$1"
+  local origin="$2"
+  local api_url="$3"
+  local hostname="$4"
+  local proto="$5"
+  local hosts="$6"
+  local example
+  example="$(dirname "$env_file")/.env.example"
+
+  if [[ -f "$example" ]]; then
+    for key in "${SHARED_IDENTITY_KEYS[@]}"; do
+      if env_has_key "$env_file" "$key" && ! env_has_key "$example" "$key"; then
+        unset_env_value "$env_file" "$key"
+      fi
+    done
+  fi
+
+  env_has_key "$env_file" EDGE_PUBLIC_URL && set_env_value "$env_file" EDGE_PUBLIC_URL "$origin"
+  env_has_key "$env_file" HUB_PUBLIC_URL && set_env_value "$env_file" HUB_PUBLIC_URL "$origin"
+  env_has_key "$env_file" NEXT_PUBLIC_HOST && set_env_value "$env_file" NEXT_PUBLIC_HOST "$origin"
+  env_has_key "$env_file" NEXTAUTH_URL && set_env_value "$env_file" NEXTAUTH_URL "$origin"
+  env_has_key "$env_file" API_PUBLIC_URL && set_env_value "$env_file" API_PUBLIC_URL "$api_url"
+  env_has_key "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST && set_env_value "$env_file" NEXT_PUBLIC_URANTIA_DEV_API_HOST "$api_url"
+  env_has_key "$env_file" EDGE_HOSTNAME && set_env_value "$env_file" EDGE_HOSTNAME "$hostname"
+  env_has_key "$env_file" EDGE_FORWARDED_PROTO && set_env_value "$env_file" EDGE_FORWARDED_PROTO "$proto"
+  env_has_key "$env_file" CADDY_HOST_MATCHERS && set_env_value "$env_file" CADDY_HOST_MATCHERS "$hosts"
+  env_has_key "$env_file" CADDY_HTTP_PORT && set_env_value "$env_file" CADDY_HTTP_PORT "$caddy_port"
+  env_has_key "$env_file" CADDY_API_PATH && set_env_value "$env_file" CADDY_API_PATH "$(normalize_api_path "$(read_env_value "$SHARED_ENV_FILE" CADDY_API_PATH)")"
 }
 
 origin="$(strip_origin "$(read_env_value "$SHARED_ENV_FILE" EDGE_PUBLIC_URL)")"
@@ -88,5 +151,9 @@ done
 
 for env_file in "${targets[@]}"; do
   [[ -f "$env_file" ]] || continue
-  stamp_file "$env_file" "$origin" "$api_url" "$hostname" "$proto" "$hosts"
+  if same_file "$env_file" "$SHARED_ENV_FILE"; then
+    write_derived "$env_file" "$origin" "$api_url" "$hostname" "$proto" "$hosts"
+  else
+    stamp_owned_keys "$env_file" "$origin" "$api_url" "$hostname" "$proto" "$hosts"
+  fi
 done

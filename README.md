@@ -3,8 +3,10 @@
 Local conductor for the reading platform. One copy of this repo is one Compose
 project (default name `urantialab`). The lab default is `MODE=prod`: hub
 `next start`, API `bun start`, and Caddy as the only published ingress, so
-phone/Cloudflare traffic matches staging. `MODE=dev` adds hot reload and
-diagnostic host ports.
+phone/Cloudflare traffic matches staging. `make dev-up` (`MODE=dev`) adds
+the `docker-compose.dev.yml` overlays: hot reload and diagnostic host ports
+from `.env.shared`. `.env.shared` is the only identity file; stack `.env`
+files keep only the keys their `.env.example` already owns.
 
 Hub, API, pipeline, and data-sources live here as git submodules. The lab
 does not become those apps — it starts their local pairs and runs the
@@ -28,14 +30,16 @@ paper 1 is Foundation prose, not the English fallback.
 `make init` writes `.env.shared` once. The first TTY write asks for the host
 port (default `8080`), the papers API path (default `/dev-api`), and a
 hostname if you want to expose this copy. Later `make init` and `make up`
-keep those values and restamp derived URLs. `make up` starts the stacks;
-it does not run the contract tests (`make validate` does). Change a stored
-key with a Make-time overwrite (`HTTP_PORT`, `CADDY_API_PATH`,
-`EDGE_PUBLIC_URL`), not by answering prompts again. Hub/API/Next public URLs and
-`EDGE_FORWARDED_PROTO` follow that origin plus `CADDY_API_PATH`. A localhost
-origin stays on `CADDY_HTTP_PORT`; a public hostname does not (that bind is
-the tunnel target). Caddy host-matches `CADDY_HOST_MATCHERS` (unique
-hostname plus loopback). Any other Host gets 404.
+keep those values and restamp derived URLs onto `.env.shared` only.
+`make up` starts the stacks; it does not run the contract tests
+(`make validate` does). Change a stored key with a Make-time overwrite
+(`HTTP_PORT`, `CADDY_API_PATH`, `EDGE_PUBLIC_URL`), not by answering
+prompts again. Hub/API/Next public URLs and `EDGE_FORWARDED_PROTO` follow
+that origin plus `CADDY_API_PATH`. A localhost origin stays on
+`CADDY_HTTP_PORT`; a public hostname does not (that bind is the tunnel
+target). Compose interpolates `CADDY_HTTP_PORT` from `--env-file
+.env.shared`. Caddy host-matches `CADDY_HOST_MATCHERS` (unique hostname
+plus loopback). Any other Host gets 404.
 
 ```bash
 make init                                          # localhost:8080
@@ -68,9 +72,19 @@ API container. After an edit, re-seed Postgres and refresh the browser.
 | Spanish / French / German tree | `make seed-lang L=es` | `paragraph_translations` and titles |
 
 Content comes from Postgres after seed. In `MODE=prod` the hub does not
-watch code — recreate it after an app change (`make hub-up`). `MODE=dev`
-(`yarn dev` / `bun --hot`) is only for an in-turn edit; flip back to
-`make up` (prod) before you finish.
+watch code — recreate it after an app change (`make hub-up`). `make
+dev-up` (`yarn dev` / `bun --hot`, plus Postgres/Redis/API/hub host ports)
+is only for an in-turn edit; flip back to `make up` (prod) before you
+finish. `make postgres-up MODE=dev` is the same overlay door for one stack.
+
+```bash
+make validate-dev
+make postgres-up MODE=dev
+make dev-up
+make verify
+make dev-down
+make up
+```
 
 Pipeline markdown still needs `make lang-run` (or a split) before the tree JSON
 companions exist. Editing a companion under `pipeline/langs/spanish` is enough for a
