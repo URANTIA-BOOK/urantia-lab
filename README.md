@@ -34,8 +34,8 @@ key with a Make-time overwrite (`HTTP_PORT`, `CADDY_API_PATH`,
 `EDGE_PUBLIC_URL`), not by answering prompts again. Hub/API/Next public URLs and
 `EDGE_FORWARDED_PROTO` follow that origin plus `CADDY_API_PATH`. A localhost
 origin stays on `CADDY_HTTP_PORT`; a public hostname does not (that bind is
-the tunnel target). Caddy only serves `EDGE_HOSTNAME` and loopback; any
-other Host gets 404.
+the tunnel target). Caddy host-matches `CADDY_HOST_MATCHERS` (unique
+hostname plus loopback). Any other Host gets 404.
 
 ```bash
 make init                                          # localhost:8080

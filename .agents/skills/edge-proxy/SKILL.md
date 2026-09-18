@@ -45,10 +45,19 @@ only the lab contract.
    `.cursor/rules/staging-prod-mode.mdc`.
 7. `./make/test-edge-urls.sh` and `./make/test-prod-mode.sh` run from
    `make validate`.
+8. Do not claim `make up` from this checkout. Detach a worktree at
+   `HEAD` (`git worktree add --detach` — the same branch cannot be
+   checked out twice), `git submodule update --init --recursive`,
+   then `make init PROJECT_NAME=<unique> HTTP_PORT=<free>
+   CADDY_API_PATH=/v1` and `make up` with overwrite keys unset.
+   Probe `/`, `$CADDY_API_PATH/health`, and `Host: evil.example`.
+   Contract tests do not start Caddy.
 
 ## Not this
 
 - Mounting the papers API at `/api` or `/papers`.
 - Importing Wealth Hasura, Auth0, or Portainer.
+- Claiming `make up` from the operator checkout or from leftover
+  containers. Prove it on a detached worktree.
 - Claiming languages verified from `make verify` alone.
 - Editing `metadata.json` or treating the lab as the book text owner.

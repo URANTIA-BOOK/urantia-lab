@@ -3,8 +3,10 @@
 }
 
 # Single published origin. Path prefix is CADDY_API_PATH (default /dev-api)
-# because the hub already owns /api. Host matcher is EDGE_HOSTNAME plus
-# loopback so a different Host header does not reach the apps.
+# because the hub already owns /api. Host matcher is CADDY_HOST_MATCHERS
+# (unique hostname plus loopback). Do not list EDGE_HOSTNAME next to a
+# hardcoded localhost — the default hostname is localhost and Caddy
+# refuses a repeated host.
 (urantia_edge) {
 	encode zstd gzip
 
