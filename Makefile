@@ -22,41 +22,52 @@ PROJECT_NAME_ENV := PROJECT_NAME_OVERRIDE=$(PROJECT_NAME_OVERRIDE) \
 DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up edge-up
 DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 
-.PHONY: help check-docker check-siblings init env-check network validate \
+.PHONY: help check-docker submodules check-siblings init env-check network validate \
 	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
+	dev-up dev-down \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
 	edge-up edge-down
 
 help:
 	@echo "Urantia lab — local conductor for the reading platform"
 	@echo ""
+	@echo "git clone --recurse-submodules <this-repo>"
+	@echo "make init && make up"
+	@echo ""
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
 	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
 	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
 	@echo ""
-	@echo "  make init               Name this copy and generate local secrets"
-	@echo "  make validate           Validate the selected Compose model"
+	@echo "  make init               Submodules + name this copy + local secrets"
+	@echo "  make submodules         git submodule update --init --recursive"
+	@echo "  make validate           Compose model + contract tests (prod)"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
-	@echo "  make up                 Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make dev-up             Watch-mode overlays + diagnostic host ports"
+	@echo "  make dev-down           Stop the development overlays"
 	@echo "  make seed               English tree + official translation overlays"
-	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
+	@echo "  make seed-lang L=es     Re-upsert bundled overlays (es = spanish + spanish_eur)"
+	@echo "  make seed-lang KEY=cze  Registry edition: lang-run if missing, then seed"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
-	@echo "  make destroy CONFIRM=true  Remove containers, volumes, and networks"
+	@echo "  make destroy CONFIRM=true  Remove this copy's containers, volumes, networks, and :local images"
 	@echo ""
 	@echo "A second copy: make init PROJECT_NAME=wt-review POSTGRES_HOST_PORT=5434"
 
 check-docker:
 	@$(DOCKER_COMPOSE) version >/dev/null
 
-check-siblings:
-	@test -f "$(API_ROOT)/package.json" || { echo "Missing API checkout at $(API_ROOT)" >&2; exit 1; }
-	@test -f "$(HUB_ROOT)/package.json" || { echo "Missing hub checkout at $(HUB_ROOT)" >&2; exit 1; }
-	@test -f "$(PIPELINE_ROOT)/source/metadata.json" || { echo "Missing English tree at $(PIPELINE_ROOT)/source (run make langs-run in the pipeline)" >&2; exit 1; }
+submodules:
+	@git -C "$(REPOSITORY_ROOT)" submodule update --init --recursive
 
-init: check-docker
+check-siblings:
+	@test -f "$(API_ROOT)/package.json" || { echo "Missing API checkout at $(API_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
+	@test -f "$(HUB_ROOT)/package.json" || { echo "Missing hub checkout at $(HUB_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
+	@test -f "$(PIPELINE_ROOT)/source/metadata.json" || { echo "Missing English tree at $(PIPELINE_ROOT)/source. Run: make submodules" >&2; exit 1; }
+
+init: check-docker submodules
 	@chmod +x make/*.sh stack/db/postgres/initdb/*.sh
 	@./make/init-env.sh
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) env
@@ -73,6 +84,7 @@ env-check:
 network: check-docker
 	@$(PROJECT_NAME_ENV) ./make/ensure-networks.sh
 
+validate: MODE=prod
 validate: init network check-siblings
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) validate
 	@$(STACK_MAKE) -C $(REDIS_DIR) validate
@@ -80,25 +92,40 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(HUB_DIR) validate
 	@$(STACK_MAKE) -C $(EDGE_DIR) validate
 	@./make/test-edge-urls.sh
+	@./make/test-edge-origin.sh
 	@./make/test-prod-mode.sh
+	@./make/test-dev-mode.sh
+	@./make/test-caddy-edge.sh
+	@./make/test-submodules.sh
+	@./make/test-seed-lang.sh
+	@./make/test-init-env.sh
+	@./make/test-destroy.sh
 	@echo "$(MODE) stack is valid."
 
 validate-dev:
 	@$(MAKE) validate MODE=dev
 
-up: validate
+up: MODE=prod
+up: init network check-siblings
 	@set -e; for target in $(DEFAULT_UP_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE); \
 	done
 	@echo "Lab is up. Hub $$(sed -n 's/^HUB_PUBLIC_URL=//p' $(SHARED_ENV_FILE))  API $$(sed -n 's/^API_PUBLIC_URL=//p' $(SHARED_ENV_FILE))"
 	@echo "Next: make seed && make verify && make review"
 
+down: MODE=prod
 down:
 	@set -e; for target in $(DEFAULT_DOWN_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE) || true; \
 	done
 
 restart: down up
+
+dev-up:
+	@$(MAKE) up MODE=dev
+
+dev-down:
+	@$(MAKE) down MODE=dev
 
 destroy:
 	@$(PROJECT_NAME_ENV) CONFIRM=$(CONFIRM) ./make/destroy.sh
@@ -138,9 +165,10 @@ edge-down:
 seed: env-check check-siblings
 	@./make/seed.sh
 
-seed-lang: env-check check-siblings
-	@test -n "$(L)" || { echo "Usage: make seed-lang L=es" >&2; exit 1; }
-	@./make/seed.sh "$(L)"
+seed-lang:
+	@test -n "$(L)$(KEY)" || { echo "Usage: make seed-lang L=es  or  make seed-lang KEY=cze [L=cs]" >&2; exit 1; }
+	@$(MAKE) env-check check-siblings
+	@L="$(L)" KEY="$(KEY)" ./make/seed.sh
 
 verify:
 	@./make/verify.sh

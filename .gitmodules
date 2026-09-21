@@ -1,0 +1,16 @@
+[submodule "hub"]
+	path = hub
+	url = ../urantia-hub.git
+	branch = main
+[submodule "api"]
+	path = api
+	url = ../urantia-dev-api.git
+	branch = main
+[submodule "pipeline"]
+	path = pipeline
+	url = ../pipeline.git
+	branch = main
+[submodule "data-sources"]
+	path = data-sources
+	url = ../urantia-data-sources.git
+	branch = main
