@@ -37,12 +37,13 @@ help:
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
 	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
 	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
+	@echo "make init writes .env.shared once (localhost:8080 unless you expose a host)."
 	@echo ""
 	@echo "  make init               Submodules + name this copy + local secrets"
 	@echo "  make submodules         git submodule update --init --recursive"
-	@echo "  make validate           Validate the selected Compose model"
+	@echo "  make validate           Compose model + contract tests (prod)"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
-	@echo "  make up                 Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
@@ -80,6 +81,7 @@ env-check:
 network: check-docker
 	@$(PROJECT_NAME_ENV) ./make/ensure-networks.sh
 
+validate: MODE=prod
 validate: init network check-siblings
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) validate
 	@$(STACK_MAKE) -C $(REDIS_DIR) validate
@@ -87,20 +89,25 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(HUB_DIR) validate
 	@$(STACK_MAKE) -C $(EDGE_DIR) validate
 	@./make/test-edge-urls.sh
+	@./make/test-edge-origin.sh
 	@./make/test-prod-mode.sh
+	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
+	@./make/test-init-env.sh
 	@echo "$(MODE) stack is valid."
 
 validate-dev:
 	@$(MAKE) validate MODE=dev
 
-up: validate
+up: MODE=prod
+up: init network check-siblings
 	@set -e; for target in $(DEFAULT_UP_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE); \
 	done
 	@echo "Lab is up. Hub $$(sed -n 's/^HUB_PUBLIC_URL=//p' $(SHARED_ENV_FILE))  API $$(sed -n 's/^API_PUBLIC_URL=//p' $(SHARED_ENV_FILE))"
 	@echo "Next: make seed && make verify && make review"
 
+down: MODE=prod
 down:
 	@set -e; for target in $(DEFAULT_DOWN_TARGETS); do \
 		$(MAKE) $$target MODE=$(MODE) || true; \
