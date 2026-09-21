@@ -44,7 +44,12 @@ Wealth is the infrastructure guide. Lab keeps only the inner-join.
 ## Who joins what
 
 - `postgres` and `redis` join `backend` only. Consumers come to them.
-  `MODE=dev` may add `ports:`. That does not move the service onto `apps`.
+  `MODE=dev` adds `ports:` and attaches the overlay network `dev`
+  (`${COMPOSE_PROJECT_NAME}-dev`, not `--internal`) so Docker can
+  publish. Overlay `networks:` replaces the base list: re-list the
+  existing planes plus `dev`. That does not move the service onto
+  `apps`. An `--internal` network may leave `NetworkSettings.Ports`
+  null; that is not a reason to join `apps`.
 - `api` joins `apps` and `backend`. It is the papers adapter: hub and
   Caddy reach it on `apps`; it reaches Postgres on `backend`.
 - `hub` joins `apps` only. SSR uses `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`.
@@ -73,8 +78,11 @@ schema or overlays are missing — seed, do not join networks.
 
 1. Change membership on the service that owns the responsibility.
 2. Keep diagnostic ports on the overlay of the service that already
-   belongs on `backend` or `apps`. Do not join `apps` to publish a port.
-3. Encode the membership in `make/test-prod-mode.sh` (prod planes).
+   belongs on `backend` or `apps`. Attach that overlay to `dev` so
+   the host port can bind. Do not join `apps` to publish a port.
+3. Encode the membership in `make/test-prod-mode.sh` (prod planes) and
+   `make/test-dev-mode.sh` (every overlay declares `dev`; postgres/redis
+   still do not join `apps`).
 4. After replacing postgres, recreate `api`, then `make seed`, then
    `make verify`.
 
@@ -84,3 +92,5 @@ schema or overlays are missing — seed, do not join networks.
 - Joining hub to `backend` so Prisma or Redis TCP works.
 - Putting Caddy on `backend`.
 - Importing Wealth Hasura, Auth0, or Portainer.
+- Treating a null `NetworkSettings.Ports` on `--internal` as a reason
+  to join `apps`. Attach `dev` instead.

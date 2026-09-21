@@ -25,6 +25,7 @@ DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 .PHONY: help check-docker submodules check-siblings init env-check network validate \
 	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
+	dev-up dev-down \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
 	edge-up edge-down
 
@@ -45,6 +46,8 @@ help:
 	@echo "  make validate           Compose model + contract tests (prod)"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
 	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
+	@echo "  make dev-up             Watch-mode overlays + diagnostic host ports"
+	@echo "  make dev-down           Stop the development overlays"
 	@echo "  make seed               English tree + official translation overlays"
 	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
@@ -92,6 +95,7 @@ validate: init network check-siblings
 	@./make/test-edge-urls.sh
 	@./make/test-edge-origin.sh
 	@./make/test-prod-mode.sh
+	@./make/test-dev-mode.sh
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
 	@./make/test-init-env.sh
@@ -115,6 +119,12 @@ down:
 	done
 
 restart: down up
+
+dev-up:
+	@$(MAKE) up MODE=dev
+
+dev-down:
+	@$(MAKE) down MODE=dev
 
 destroy:
 	@$(PROJECT_NAME_ENV) CONFIRM=$(CONFIRM) ./make/destroy.sh

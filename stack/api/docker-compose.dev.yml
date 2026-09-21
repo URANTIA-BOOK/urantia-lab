@@ -13,7 +13,22 @@ services:
       - api_bun_cache:/root/.bun
     ports:
       - "${API_HOST_PORT:-3000}:3000"
+    networks:
+      - apps
+      - backend
+      - dev
 
 volumes:
   api_node_modules: {}
   api_bun_cache: {}
+
+networks:
+  apps:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true
+  backend:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-backend
+    external: true
+  dev:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-dev
+

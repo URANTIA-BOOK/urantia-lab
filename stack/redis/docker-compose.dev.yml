@@ -1,6 +1,17 @@
-# Diagnostic host port only. Do not join apps.
-# Contract: .agents/skills/stack-networks/SKILL.md
+# Diagnostic host port. Overlay `networks:` replaces the base list, so
+# keep backend and attach `dev` (non-internal) so Docker can publish.
+# Do not join apps. Contract: .agents/skills/stack-networks/SKILL.md
 services:
   redis:
     ports:
       - "${REDIS_HOST_PORT:-6380}:6379"
+    networks:
+      - backend
+      - dev
+
+networks:
+  backend:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-backend
+    external: true
+  dev:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-dev

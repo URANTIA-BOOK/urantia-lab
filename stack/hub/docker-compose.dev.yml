@@ -10,6 +10,17 @@ services:
       - hub_node_modules:/app/node_modules
     ports:
       - "${HUB_HOST_PORT:-3001}:3001"
+    networks:
+      - apps
+      - dev
 
 volumes:
   hub_node_modules: {}
+
+networks:
+  apps:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true
+  dev:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-dev
+
