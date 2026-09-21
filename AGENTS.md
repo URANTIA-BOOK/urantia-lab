@@ -81,9 +81,12 @@
  engine cannot see this checkout. Edge contract: `.agents/skills/edge-proxy/SKILL.md`.
 - Cloud Agent environment `install` runs `make/cloud-agent-install.sh`: it
  initializes every submodule recursively. `pipeline` is private, so the
- script applies an org-scoped `url.insteadOf` using `GH_TOKEN` for the fetch
- only (never persisted) to beat Cursor's managed GitHub App rewrite, which
- cannot read the private repo. The public trees clone anonymously.
+ script fetches through the `aipal-agent_gh` SSH identity that
+ `uklok-agent boot` injects — an org-scoped `https -> git@github.com`
+ `url.insteadOf` for the fetch only (never persisted) beats Cursor's managed
+ GitHub App rewrite, which cannot read the private repo. If the key file is
+ not on disk yet (during an environment build, before boot runs) it is
+ materialized from the injected `SSH_GITHUB` secret into `$HOME/.ssh`.
 
 ## Validation
 
