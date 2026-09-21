@@ -77,8 +77,13 @@
   gate. Do not claim languages verified until the operator has read paper 1
   in English and `?lang=es`.
 - Cloud Agent Compose bind mounts need `uklok-agent docker-local` (org
-  skill `docker-local`) before `make up`. The hosted `tcp://127.0.0.1:2375`
-  engine cannot see this checkout. Edge contract: `.agents/skills/edge-proxy/SKILL.md`.
+ skill `docker-local`) before `make up`. The hosted `tcp://127.0.0.1:2375`
+ engine cannot see this checkout. Edge contract: `.agents/skills/edge-proxy/SKILL.md`.
+- Cloud Agent environment `install` runs `make/cloud-agent-install.sh`: it
+ initializes every submodule recursively. `pipeline` is private, so the
+ script applies an org-scoped `url.insteadOf` using `GH_TOKEN` for the fetch
+ only (never persisted) to beat Cursor's managed GitHub App rewrite, which
+ cannot read the private repo. The public trees clone anonymously.
 
 ## Validation
 
