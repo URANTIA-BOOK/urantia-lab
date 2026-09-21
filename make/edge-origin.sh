@@ -43,6 +43,30 @@ valid_http_port() {
   ((port <= 65535))
 }
 
+# 0.0.0.0 / :: are listen-any, not a Host a browser can open.
+is_bind_any_host() {
+  [[ "$1" == "0.0.0.0" || "$1" == "::" ]]
+}
+
+is_ip_literal() {
+  local host="$1"
+  [[ "$host" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] && return 0
+  [[ "$host" == *:* ]] && return 0
+  return 1
+}
+
+# Loopback, LAN IP, and *.local talk to this copy's Caddy. A DNS name is
+# the tunnel hostname (TLS elsewhere, no bind port on the origin).
+edge_host_follows_bind_port() {
+  local host="$1"
+  is_bind_any_host "$host" && return 1
+  case "$host" in
+    localhost|127.0.0.1|::1) return 0 ;;
+    *.local) return 0 ;;
+  esac
+  is_ip_literal "$host"
+}
+
 choose_caddy_http_port() {
   local current="${1:-}"
   local existed="${2:-false}"
@@ -71,7 +95,11 @@ choose_caddy_http_port() {
 derive_edge_public_url() {
   local host="$1"
   local port="$2"
-  if [[ "$host" == "localhost" || "$host" == "127.0.0.1" ]]; then
+  if is_bind_any_host "$host"; then
+    echo "Published hostname cannot be $host (listen-any, not a browser origin). Use localhost or a LAN IP." >&2
+    return 1
+  fi
+  if edge_host_follows_bind_port "$host"; then
     printf 'http://%s:%s' "$host" "$port"
     return
   fi
@@ -121,7 +149,7 @@ choose_edge_public_url() {
   fi
   if [[ -n "${EDGE_HOSTNAME:-}" ]]; then
     derive_edge_public_url "$EDGE_HOSTNAME" "$port"
-    return
+    return $?
   fi
   if chosen="$(existing_env_choice "" "$current" "$existed")"; then
     printf '%s' "${chosen%/}"
@@ -135,14 +163,14 @@ choose_edge_public_url() {
     read -r -p "Published hostname [${prompt_host}]: " value
     if [[ -z "$value" ]]; then
       derive_edge_public_url "$prompt_host" "$port"
-      return
+      return $?
     fi
     if [[ "$value" =~ ^https?:// ]]; then
       printf '%s' "${value%/}"
       return
     fi
     derive_edge_public_url "$value" "$port"
-    return
+    return $?
   fi
 
   printf '%s' "$suggested"

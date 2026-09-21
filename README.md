@@ -35,9 +35,10 @@ keep those values and restamp derived URLs onto `.env.shared` only.
 (`make validate` does). Change a stored key with a Make-time overwrite
 (`HTTP_PORT`, `CADDY_API_PATH`, `EDGE_PUBLIC_URL`), not by answering
 prompts again. Hub/API/Next public URLs and `EDGE_FORWARDED_PROTO` follow
-that origin plus `CADDY_API_PATH`. A localhost origin stays on
-`CADDY_HTTP_PORT`; a public hostname does not (that bind is the tunnel
-target). Compose interpolates `CADDY_HTTP_PORT` from `--env-file
+that origin plus `CADDY_API_PATH`. Localhost, a LAN IP, and `*.local`
+stay on `CADDY_HTTP_PORT` as `http`. A public hostname is `https` and
+does not take the bind port (that bind is the tunnel target). `0.0.0.0`
+is a listen address, not an origin. Compose interpolates `CADDY_HTTP_PORT` from `--env-file
 .env.shared`. Caddy host-matches `CADDY_HOST_MATCHERS` (unique hostname
 plus loopback). Any other Host gets 404.
 

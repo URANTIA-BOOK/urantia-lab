@@ -60,6 +60,16 @@ assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HOST_MATCHERS)" \
   'localhost 127.0.0.1 localhost:9080 127.0.0.1:9080' \
   "localhost host list follows the bind port once"
 
+write_shared 'http://172.16.1.3:8081'
+set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
+run_stamp
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_PUBLIC_URL)" 'http://172.16.1.3:9080' "LAN origin follows CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" API_PUBLIC_URL)" 'http://172.16.1.3:9080/dev-api' "LAN API follows CADDY_HTTP_PORT"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" EDGE_FORWARDED_PROTO)" 'http' "LAN forwarded proto is http"
+assert_eq "$(read_env_value "$stamp_dir/.env.shared" CADDY_HOST_MATCHERS)" \
+  '172.16.1.3 localhost 127.0.0.1 172.16.1.3:9080 localhost:9080 127.0.0.1:9080' \
+  "LAN host list keeps loopback"
+
 write_shared 'https://urantia.uklok.cloud'
 set_env_value "$stamp_dir/.env.shared" CADDY_HTTP_PORT 9080
 run_stamp

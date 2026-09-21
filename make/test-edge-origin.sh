@@ -30,6 +30,18 @@ out="$(choose_caddy_http_port "9080" true)"
 out="$(HTTP_PORT=9090 choose_caddy_http_port "9080" true)"
 [[ "$out" == "9090" ]] || fail "HTTP_PORT must win over a stored port (got '$out')"
 
+out="$(derive_edge_public_url localhost 8081)"
+[[ "$out" == "http://localhost:8081" ]] || fail "localhost must stay http on the bind port (got '$out')"
+out="$(derive_edge_public_url 172.16.1.3 8081)"
+[[ "$out" == "http://172.16.1.3:8081" ]] || fail "LAN IP must stay http on the bind port (got '$out')"
+out="$(derive_edge_public_url urantia.uklok.cloud 8081)"
+[[ "$out" == "https://urantia.uklok.cloud" ]] || fail "public hostname must be https without the bind port (got '$out')"
+if derive_edge_public_url 0.0.0.0 8081 >/dev/null 2>&1; then
+  fail "0.0.0.0 must not become a published origin"
+fi
+out="$(EDGE_HOSTNAME=172.16.1.3 choose_edge_public_url "" false 8081)"
+[[ "$out" == "http://172.16.1.3:8081" ]] || fail "EDGE_HOSTNAME LAN IP must derive http + port (got '$out')"
+
 out="$(existing_env_choice "" "9080" true)"
 [[ "$out" == "9080" ]] || fail "existing_env_choice must keep a written value (got '$out')"
 out="$(existing_env_choice "9090" "9080" true)"

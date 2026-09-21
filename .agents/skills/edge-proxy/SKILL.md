@@ -25,8 +25,10 @@ only the lab contract.
    starts stacks; it does not run `make validate`. Choosers sourced by
    tests must not interview just because stdin is a TTY. `HTTP_PORT` /
    `CADDY_HTTP_PORT` / `CADDY_API_PATH` / `EDGE_PUBLIC_URL` overwrite.
-   `make/stamp-edge-urls.sh` keeps a localhost origin on `CADDY_HTTP_PORT`
-   and derives those public keys onto `.env.shared` only. A stack `.env`
+   `make/stamp-edge-urls.sh` keeps a bind-port origin (localhost, LAN IP,
+   `*.local`) on `CADDY_HTTP_PORT` as `http` and derives those public keys
+   onto `.env.shared` only. A public hostname stays `https` without that
+   port. `0.0.0.0` is not an origin. A stack `.env`
    is stamped only for keys its `.env.example` already owns; leftover
    identity copies are stripped. Compose interpolates `CADDY_HTTP_PORT`
    from `--env-file .env.shared`. Do not pin that key on `COMPOSE :=`.

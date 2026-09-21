@@ -3,8 +3,8 @@
 # .env.shared is the only identity file. Stack .env files keep only the
 # keys they already own (Wealth stamp-app-urls). Compose interpolates
 # CADDY_HTTP_PORT and diagnostic host ports from --env-file .env.shared.
-# A localhost / 127.0.0.1 origin follows CADDY_HTTP_PORT. A public host
-# does not (the bind port is the tunnel target, not the browser origin).
+# A bind-port origin (localhost, LAN IP, *.local) follows CADDY_HTTP_PORT.
+# A public hostname does not (the bind port is the tunnel target).
 # Hub SSR stays on URANTIA_DEV_API_INTERNAL_HOST=http://api:3000.
 set -euo pipefail
 
@@ -155,7 +155,7 @@ fi
 hostname="$(origin_hostname "$origin")"
 [[ -n "$hostname" ]] || hostname="$DEFAULT_EDGE_HOSTNAME"
 caddy_port="$(read_env_value "$SHARED_ENV_FILE" CADDY_HTTP_PORT)"
-if valid_http_port "$caddy_port" && { [[ "$hostname" == "localhost" ]] || [[ "$hostname" == "127.0.0.1" ]]; }; then
+if valid_http_port "$caddy_port" && edge_host_follows_bind_port "$hostname"; then
   origin="$(derive_edge_public_url "$hostname" "$caddy_port")"
 fi
 

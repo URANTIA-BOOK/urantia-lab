@@ -34,7 +34,9 @@
   `http://localhost:8080`). The first TTY `make init` asks for the published
   port (default `8080`), the papers API path, and a hostname to expose.
   Later `make init` / `make up` keep `.env.shared`. Make-time `HTTP_PORT` /
-  `CADDY_API_PATH` / `EDGE_PUBLIC_URL` overwrite a stored key. Derived
+  `CADDY_API_PATH` / `EDGE_PUBLIC_URL` overwrite a stored key. A LAN IP
+  or `*.local` stays `http` on `CADDY_HTTP_PORT`; a public hostname is
+  `https` without that port. `0.0.0.0` is not an origin. Derived
   values stay on `.env.shared`: `EDGE_HOSTNAME`, `EDGE_FORWARDED_PROTO`,
   `HUB_PUBLIC_URL`, `API_PUBLIC_URL`, `NEXT_PUBLIC_*`, `NEXTAUTH_URL`.
   Hub SSR stays on `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`. The
