@@ -6,10 +6,15 @@ project (default name `urantialab`). The lab default is `MODE=prod`: hub
 phone/Cloudflare traffic matches staging. `MODE=dev` adds hot reload and
 diagnostic host ports.
 
-It does not own book text, the API, or the hub. It starts their local pairs
-and runs the verification door.
+Hub, API, pipeline, and data-sources live here as git submodules. The lab
+does not become those apps — it starts their local pairs and runs the
+verification door.
+
+A plain clone still works: `make init` runs `git submodule update --init --recursive`.
 
 ```bash
+git clone --recurse-submodules git@github.com:URANTIA-BOOK/urantia-lab.git
+cd urantia-lab
 make init
 make up
 make seed
@@ -46,7 +51,7 @@ API container. After an edit, re-seed Postgres and refresh the browser.
 
 | What you changed | Command | What updates |
 | --- | --- | --- |
-| English tree (`URANTIA/source`) | `make seed` | papers / paragraphs (upsert) |
+| English tree (`pipeline/source`) | `make seed` | papers / paragraphs (upsert) |
 | Spanish / French / German tree | `make seed-lang L=es` | `paragraph_translations` and titles |
 
 Content comes from Postgres after seed. In `MODE=prod` the hub does not

@@ -26,8 +26,10 @@ endif
 APPS_NETWORK := $(PROJECT_NAME)-apps
 BACKEND_NETWORK := $(PROJECT_NAME)-backend
 
-UKLOK_ROOT ?= $(abspath $(REPOSITORY_ROOT)/..)
-PIPELINE_ROOT ?= $(UKLOK_ROOT)/URANTIA
-API_ROOT ?= $(UKLOK_ROOT)/urantia-dev-api
-HUB_ROOT ?= $(UKLOK_ROOT)/urantia-hub
+# Apps live in this checkout (git submodules). Override only to point at a
+# different tree; do not invent a second sibling layout.
+PIPELINE_ROOT ?= $(REPOSITORY_ROOT)/pipeline
+API_ROOT ?= $(REPOSITORY_ROOT)/api
+HUB_ROOT ?= $(REPOSITORY_ROOT)/hub
+DATA_SOURCES_ROOT ?= $(REPOSITORY_ROOT)/data-sources
 endif

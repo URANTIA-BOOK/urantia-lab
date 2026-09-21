@@ -20,6 +20,16 @@ read_env_value() {
   sed -n "s/^${key}=//p" "$file" | tail -n 1
 }
 
+unset_env_value() {
+  local file="$1"
+  local key="$2"
+  [[ -f "$file" ]] || return 0
+  if grep -q "^${key}=" "$file" 2>/dev/null; then
+    sed -i.bak "/^${key}=/d" "$file"
+    rm -f "${file}.bak"
+  fi
+}
+
 ensure_secret() {
   local file="$1"
   local key="$2"

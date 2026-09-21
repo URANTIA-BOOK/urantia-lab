@@ -22,7 +22,7 @@ PROJECT_NAME_ENV := PROJECT_NAME_OVERRIDE=$(PROJECT_NAME_OVERRIDE) \
 DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up edge-up
 DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 
-.PHONY: help check-docker check-siblings init env-check network validate \
+.PHONY: help check-docker submodules check-siblings init env-check network validate \
 	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
 	postgres-up postgres-down redis-up redis-down api-up api-down hub-up hub-down \
@@ -31,11 +31,15 @@ DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 help:
 	@echo "Urantia lab — local conductor for the reading platform"
 	@echo ""
+	@echo "git clone --recurse-submodules <this-repo>"
+	@echo "make init && make up"
+	@echo ""
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
 	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
 	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
 	@echo ""
-	@echo "  make init               Name this copy and generate local secrets"
+	@echo "  make init               Submodules + name this copy + local secrets"
+	@echo "  make submodules         git submodule update --init --recursive"
 	@echo "  make validate           Validate the selected Compose model"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
 	@echo "  make up                 Postgres + Redis + API + hub + edge (prod)"
@@ -51,12 +55,15 @@ help:
 check-docker:
 	@$(DOCKER_COMPOSE) version >/dev/null
 
-check-siblings:
-	@test -f "$(API_ROOT)/package.json" || { echo "Missing API checkout at $(API_ROOT)" >&2; exit 1; }
-	@test -f "$(HUB_ROOT)/package.json" || { echo "Missing hub checkout at $(HUB_ROOT)" >&2; exit 1; }
-	@test -f "$(PIPELINE_ROOT)/source/metadata.json" || { echo "Missing English tree at $(PIPELINE_ROOT)/source (run make langs-run in the pipeline)" >&2; exit 1; }
+submodules:
+	@git -C "$(REPOSITORY_ROOT)" submodule update --init --recursive
 
-init: check-docker
+check-siblings:
+	@test -f "$(API_ROOT)/package.json" || { echo "Missing API checkout at $(API_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
+	@test -f "$(HUB_ROOT)/package.json" || { echo "Missing hub checkout at $(HUB_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
+	@test -f "$(PIPELINE_ROOT)/source/metadata.json" || { echo "Missing English tree at $(PIPELINE_ROOT)/source. Run: make submodules" >&2; exit 1; }
+
+init: check-docker submodules
 	@chmod +x make/*.sh stack/db/postgres/initdb/*.sh
 	@./make/init-env.sh
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) env
@@ -81,6 +88,7 @@ validate: init network check-siblings
 	@$(STACK_MAKE) -C $(EDGE_DIR) validate
 	@./make/test-edge-urls.sh
 	@./make/test-prod-mode.sh
+	@./make/test-submodules.sh
 	@echo "$(MODE) stack is valid."
 
 validate-dev:
