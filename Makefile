@@ -36,6 +36,7 @@ help:
 	@echo ""
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
 	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
+	@echo "Hub and API run from their module images; the only bind is book data."
 	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
 	@echo "make init writes .env.shared once (localhost:8080 unless you expose a host)."
 	@echo ""

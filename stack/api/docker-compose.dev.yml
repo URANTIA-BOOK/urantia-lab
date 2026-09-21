@@ -1,7 +1,19 @@
 services:
   api:
+    image: oven/bun:1.2
+    working_dir: /app
     command: ["sh", "-c", "bun install && bun run dev"]
     environment:
       NODE_ENV: development
+    volumes:
+      - ${API_ROOT}:/app
+      - ${PIPELINE_ROOT}/source:/book/eng:ro
+      - ${PIPELINE_ROOT}/langs:/book/langs:ro
+      - api_node_modules:/app/node_modules
+      - api_bun_cache:/root/.bun
     ports:
       - "${API_HOST_PORT:-3000}:3000"
+
+volumes:
+  api_node_modules: {}
+  api_bun_cache: {}

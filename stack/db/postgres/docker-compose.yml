@@ -2,6 +2,7 @@ services:
   postgres:
     image: pgvector/pgvector:pg17
     restart: unless-stopped
+    # Backend only. Consumers (api) connect here. Do not join apps.
     networks:
       - backend
     volumes:

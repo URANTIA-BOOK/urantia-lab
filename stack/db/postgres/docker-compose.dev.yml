@@ -1,3 +1,5 @@
+# Diagnostic host port only. Do not join apps.
+# Contract: .agents/skills/stack-networks/SKILL.md
 services:
   postgres:
     ports:
