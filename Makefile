@@ -37,9 +37,7 @@ help:
 	@echo ""
 	@echo "One copy of this repo is one Compose project (default name urantialab)."
 	@echo "This lab's default is MODE=prod: next start / bun start, Caddy only."
-	@echo "Hub and API run from their module images; the only bind is book data."
 	@echo "Phone/Cloudflare usage is staging. MODE=dev is hot-reload only."
-	@echo "make init writes .env.shared once (localhost:8080 unless you expose a host)."
 	@echo ""
 	@echo "  make init               Submodules + name this copy + local secrets"
 	@echo "  make submodules         git submodule update --init --recursive"
@@ -49,7 +47,8 @@ help:
 	@echo "  make dev-up             Watch-mode overlays + diagnostic host ports"
 	@echo "  make dev-down           Stop the development overlays"
 	@echo "  make seed               English tree + official translation overlays"
-	@echo "  make seed-lang L=es     Re-upsert one overlay from its language tree"
+	@echo "  make seed-lang L=es     Re-upsert bundled overlays (es = spanish + spanish_eur)"
+	@echo "  make seed-lang KEY=cze  Registry edition: lang-run if missing, then seed"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
@@ -98,6 +97,7 @@ validate: init network check-siblings
 	@./make/test-dev-mode.sh
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
+	@./make/test-seed-lang.sh
 	@./make/test-init-env.sh
 	@./make/test-destroy.sh
 	@echo "$(MODE) stack is valid."
@@ -165,9 +165,10 @@ edge-down:
 seed: env-check check-siblings
 	@./make/seed.sh
 
-seed-lang: env-check check-siblings
-	@test -n "$(L)" || { echo "Usage: make seed-lang L=es" >&2; exit 1; }
-	@./make/seed.sh "$(L)"
+seed-lang:
+	@test -n "$(L)$(KEY)" || { echo "Usage: make seed-lang L=es  or  make seed-lang KEY=cze [L=cs]" >&2; exit 1; }
+	@$(MAKE) env-check check-siblings
+	@L="$(L)" KEY="$(KEY)" ./make/seed.sh
 
 verify:
 	@./make/verify.sh
