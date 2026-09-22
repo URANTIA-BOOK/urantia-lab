@@ -22,7 +22,12 @@ make verify
 make review
 ```
 
-A plain clone still works: `make init` runs `git submodule update --init --recursive`.
+A plain clone still works: `make init` runs `git submodule update --init --recursive`
+and points each fork submodule at its GitHub parent. `make upstream` fetches
+that parent again. Hub's parent is `https://github.com/urantia-hub/urantia-hub`.
+A checkout that is not a fork is left without an `upstream` remote. Pull
+requests back to a parent are opened from `origin`; this command does not
+open them.
 
 `make review` is the language gate. You confirm Spanish (and French/German)
 paper 1 is Foundation prose, not the English fallback.
