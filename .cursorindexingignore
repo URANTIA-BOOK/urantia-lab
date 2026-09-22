@@ -1,0 +1,10 @@
+pipeline/raw/**
+pipeline/source/**/*.md
+pipeline/source/**/*.json
+!pipeline/source/metadata.json
+pipeline/langs/**/*.md
+pipeline/langs/**/*.json
+!pipeline/langs/registry.json
+!pipeline/langs/README.md
+!pipeline/langs/sources.txt
+!pipeline/langs/safe.json
