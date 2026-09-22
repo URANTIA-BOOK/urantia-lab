@@ -98,3 +98,31 @@ When the user does ask, open only the paper or file they named. Do not walk sibl
   `.agents/skills/edge-proxy/SKILL.md`). A second copy that stays up
   is residual mess.
 - Never version `.env`, `.env.shared`, or generated secrets.
+
+## Cursor Cloud specific instructions
+
+- The Cloud Agent environment is dashboard-managed. `install` prepares the
+  checkout (does not start services); `start` boots the identity and brings
+  the stack up. Everything git goes through the injected `aipal-agent_gh`
+  SSH identity, not a token.
+- `install` (build-time, idempotent, no long-running processes):
+  1. `curl -fsSL https://git.uklok.cloud/open/agent/-/raw/main/install.sh | bash`
+     (installs `uklok-agent`, Docker CLI, git-intent; bakes org skills and
+     then wipes `~/.ssh`).
+  2. `sudo apt-get update && sudo apt-get install -y zsh python3-venv python3.12-venv gh`.
+  3. `uklok-agent docker-local` (local engine that sees this checkout).
+  4. `uklok-agent ssh` — re-materialize the SSH identity that step 1 wiped
+     (keys come from injected secrets; needed before any git fetch).
+  5. Route this org's GitHub over SSH so the private `pipeline` clones and
+     Cursor's managed https+token rewrite cannot hijack it (longest-prefix
+     wins; no secret stored), then point origin at SSH:
+     `git config --global url."git@github.com:URANTIA-BOOK/".insteadOf "https://github.com/URANTIA-BOOK/"`,
+     `git config --global --add url."git@github.com:URANTIA-BOOK/".insteadOf "git@github.com:URANTIA-BOOK/"`,
+     `git remote set-url origin git@github.com:URANTIA-BOOK/urantia-lab.git`.
+  6. `make init` (recursive submodule clone + `.env.shared`).
+  7. `make -C pipeline setup` (pipeline venv + `pipeline/.env`).
+  8. `make -C stack/api build BUILD=true` and `make -C stack/hub build BUILD=true`
+     so `start` does not cold-build the images each boot.
+- `start` (per boot): `uklok-agent boot` then `make up`. Close on prod
+  (`.cursor/rules/staging-prod-mode.mdc`); the seeded Postgres volume and
+  built images persist in the environment snapshot, so `make up` is warm.
