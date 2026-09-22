@@ -22,7 +22,7 @@ PROJECT_NAME_ENV := PROJECT_NAME_OVERRIDE=$(PROJECT_NAME_OVERRIDE) \
 DEFAULT_UP_TARGETS := postgres-up redis-up api-up hub-up edge-up
 DEFAULT_DOWN_TARGETS := edge-down hub-down api-down redis-down postgres-down
 
-.PHONY: help check-docker submodules check-siblings init env-check network validate \
+.PHONY: help check-docker submodules upstream check-siblings init env-check network validate \
 	validate-dev \
 	up down restart destroy ps logs verify seed seed-lang review \
 	dev-up dev-down \
@@ -41,6 +41,7 @@ help:
 	@echo ""
 	@echo "  make init               Submodules + name this copy + local secrets"
 	@echo "  make submodules         git submodule update --init --recursive"
+	@echo "  make upstream           Fetch each fork's GitHub parent as upstream"
 	@echo "  make validate           Compose model + contract tests (prod)"
 	@echo "  make validate-dev       Validate MODE=dev overlays"
 	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
@@ -62,6 +63,9 @@ check-docker:
 submodules:
 	@git -C "$(REPOSITORY_ROOT)" submodule update --init --recursive
 
+upstream:
+	@UPSTREAM_FETCH=always ./make/upstream-remotes.sh
+
 check-siblings:
 	@test -f "$(API_ROOT)/package.json" || { echo "Missing API checkout at $(API_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
 	@test -f "$(HUB_ROOT)/package.json" || { echo "Missing hub checkout at $(HUB_ROOT). Run: git clone --recurse-submodules" >&2; exit 1; }
@@ -69,6 +73,7 @@ check-siblings:
 
 init: check-docker submodules
 	@chmod +x make/*.sh stack/db/postgres/initdb/*.sh
+	@UPSTREAM_FETCH=missing ./make/upstream-remotes.sh
 	@./make/init-env.sh
 	@$(STACK_MAKE) -C $(POSTGRES_DIR) env
 	@$(STACK_MAKE) -C $(REDIS_DIR) env
@@ -97,6 +102,7 @@ validate: init network check-siblings
 	@./make/test-dev-mode.sh
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
+	@./make/test-upstream.sh
 	@./make/test-seed-lang.sh
 	@./make/test-init-env.sh
 	@./make/test-destroy.sh
