@@ -50,6 +50,14 @@
 - Official Foundation trees supersede AI translations. Overlay `spa/fre/ger`
   as API `es/fr/de`.
 
+## Book text
+
+`pipeline/raw/`, `pipeline/source/`, and `pipeline/langs/` are the book. Do not open, search, list, or summarize that text unless the user explicitly asks for it.
+
+`pipeline/source/metadata.json` stays available when a stack check needs the edition contract. `pipeline/langs/registry.json`, `pipeline/langs/README.md`, `pipeline/langs/sources.txt`, and `pipeline/langs/safe.json` stay available.
+
+When the user does ask, open only the paper or file they named. Do not walk sibling papers, other editions, or the rest of the tree.
+
 ## Operating contract
 
 - The root Makefile is the door: `init` writes identity (interviews once),
