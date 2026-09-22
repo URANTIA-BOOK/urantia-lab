@@ -69,9 +69,9 @@ API container. After an edit, re-seed Postgres and refresh the browser.
 
 | What you changed | Command | What updates |
 | --- | --- | --- |
-| English tree (`pipeline/source`) | `make seed` | papers / paragraphs (upsert) |
-| Spanish / French / German tree | `make seed-lang L=es` | `paragraph_translations` and titles |
-| Any registry edition | `make seed-lang KEY=cze` | `lang-run LOCAL=1` if `langs/<repo>` is missing, then that overlay |
+| Any built edition | `make seed` | English papers, then every overlay `langs-status` marks built |
+| One short overlay | `make seed-lang L=es` | `es` (spanish + spanish_eur), `fr`, or `de` |
+| One registry edition | `make seed-lang KEY=cze` | `lang-run LOCAL=1` if `langs/<repo>` is missing, then that overlay |
 
 Content comes from Postgres after seed. In `MODE=prod` the hub does not
 watch code — recreate it after an app change (`make hub-up`). `make
@@ -96,10 +96,13 @@ make dev-down
 make up
 ```
 
-Pipeline markdown still needs a processed tree before the lab can overlay it.
-`make seed-lang KEY=cze` looks up `pipeline/langs/registry.json` and runs
+`make seed` reads `make -C pipeline langs-status` and loads every edition
+whose `built` column is `yes`. English is the base papers seed. Each other
+built tree is an overlay; the API `?lang=` code comes from that tree's
+metadata. A row that is not built is skipped. `make seed-lang KEY=cze`
+still looks up `pipeline/langs/registry.json` and runs
 `make -C pipeline lang-run L=cze LOCAL=1` when `langs/czech/metadata.json` is
-missing. `L=es|fr|de` stays the bundled short path (`es` is spanish +
+missing. `L=es|fr|de` stays the short path for one overlay (`es` is spanish +
 spanish_eur). Optional `L=` on a KEY run is the API `?lang=` override
 (`make seed-lang L=cs KEY=cze`); omit it to take the code from metadata.
 
