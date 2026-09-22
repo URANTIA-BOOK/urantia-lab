@@ -14,10 +14,13 @@ printf '%s\n' "$help" | grep -q 'make upstream' \
   || fail "make help must mention make upstream"
 
 make -C "$ROOT" upstream
+make -C "$ROOT" upstream >/dev/null
 
 expect() {
   local dir="$1" want="$2" got
-  got="$(git -C "$ROOT/$dir" remote get-url upstream)"
+  # config, not `git remote get-url`: a global insteadOf rewrite injects
+  # credentials into the displayed URL.
+  got="$(git -C "$ROOT/$dir" config --get remote.upstream.url)"
   [[ "$got" == "$want" ]] || fail "$dir upstream is $got, want $want"
   git -C "$ROOT/$dir" rev-parse --verify --quiet refs/remotes/upstream/main >/dev/null \
     || fail "$dir did not fetch upstream/main"
@@ -35,7 +38,5 @@ fi
 if git -C "$ROOT/pipeline/source" remote get-url upstream >/dev/null 2>&1; then
   fail "English source is not a fork and must not grow an upstream remote"
 fi
-
-make -C "$ROOT" upstream >/dev/null
 
 echo "upstream: fork submodules track their GitHub parents"
