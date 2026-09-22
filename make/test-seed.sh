@@ -15,6 +15,9 @@ help="$(make -C "$ROOT" -s help)"
 printf '%s\n' "$help" | grep -q 'langs-status marks built' \
   || fail "make help must say make seed follows langs-status"
 
+grep -q '</dev/null' "$ROOT/make/seed.sh" \
+  || fail "compose exec must not read the langs-status loop on stdin"
+
 # shellcheck source=seed.sh
 source "$ROOT/make/seed.sh"
 

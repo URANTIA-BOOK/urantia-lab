@@ -14,6 +14,8 @@ API_ROOT="$(read_env_value "$SHARED_ENV_FILE" API_ROOT)"
 PIPELINE_ROOT="$(read_env_value "$SHARED_ENV_FILE" PIPELINE_ROOT)"
 
 compose_api() {
+  # exec inherits this script's stdin. A langs-status loop would lose every
+  # row after the first overlay if compose read that stream.
   COMPOSE_PROJECT_NAME="$name" COMPOSE_IGNORE_ORPHANS=true \
     API_ROOT="$API_ROOT" PIPELINE_ROOT="$PIPELINE_ROOT" \
     docker compose --project-name "$name" \
@@ -21,7 +23,7 @@ compose_api() {
       --env-file "$REPOSITORY_ROOT/stack/api/.env" \
       --env-file "$SHARED_ENV_FILE" \
       -f "$REPOSITORY_ROOT/stack/api/docker-compose.yml" \
-      "$@"
+      "$@" </dev/null
 }
 
 usage_seed_lang() {
