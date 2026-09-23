@@ -46,9 +46,9 @@ help:
 	@echo "  make up                 Start Postgres + Redis + API + hub + edge (prod)"
 	@echo "  make dev-up             Watch-mode overlays + diagnostic host ports"
 	@echo "  make dev-down           Stop the development overlays"
-	@echo "  make seed               English tree + official translation overlays"
-	@echo "  make seed-lang L=es     Re-upsert bundled overlays (es = spanish + spanish_eur)"
-	@echo "  make seed-lang KEY=cze  Registry edition: lang-run if missing, then seed"
+	@echo "  make seed               Every edition langs-status marks built"
+	@echo "  make seed-lang L=es     Re-upsert one short overlay (es, fr, or de)"
+	@echo "  make seed-lang KEY=cze  One registry edition; lang-run if it is not built"
 	@echo "  make verify             Probe edge, API health, languages, and hub"
 	@echo "  make review             Print the human language-review URLs"
 	@echo "  make down               Stop this copy (keeps volumes)"
@@ -98,6 +98,7 @@ validate: init network check-siblings
 	@./make/test-caddy-edge.sh
 	@./make/test-submodules.sh
 	@./make/test-seed-lang.sh
+	@./make/test-seed.sh
 	@./make/test-init-env.sh
 	@./make/test-destroy.sh
 	@echo "$(MODE) stack is valid."
