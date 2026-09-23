@@ -39,6 +39,34 @@ ensure_secret "$SHARED_ENV_FILE" POSTGRES_PASSWORD
 ensure_secret "$SHARED_ENV_FILE" REDIS_PASSWORD
 ensure_secret "$SHARED_ENV_FILE" NEXTAUTH_SECRET
 
+# Sign-in follows these four keys. The first TTY init asks; default is no,
+# which leaves them empty. Later init keeps a stored value.
+fill_auth_providers() {
+  local file="$1"
+  local key answer value
+  local -a keys=(GOOGLE_CLIENT_ID GOOGLE_CLIENT_SECRET RESEND_API_KEY EMAIL_FROM)
+  if init_interviewing; then
+    echo "Sign-in uses Google and Resend. Leave them empty to serve the reader." >&2
+    read -r -p "Enable AUTH? [n]: " answer
+    answer="$(printf '%s' "${answer:-n}" | tr '[:upper:]' '[:lower:]')"
+    if [[ "$answer" == "y" || "$answer" == "yes" ]]; then
+      for key in "${keys[@]}"; do
+        read -r -p "$key: " value
+        set_env_value "$file" "$key" "$value"
+      done
+      return
+    fi
+  fi
+  for key in "${keys[@]}"; do
+    if [[ -n "${!key:-}" ]]; then
+      set_env_value "$file" "$key" "${!key}"
+    elif ! grep -q "^${key}=" "$file"; then
+      set_env_value "$file" "$key" ""
+    fi
+  done
+}
+fill_auth_providers "$SHARED_ENV_FILE"
+
 # Leftover sibling-layout keys must not remount UKLOK_ROOT trees.
 unset_env_value "$SHARED_ENV_FILE" UKLOK_ROOT
 set_env_value "$SHARED_ENV_FILE" PIPELINE_ROOT "$REPOSITORY_ROOT/pipeline"

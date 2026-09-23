@@ -46,6 +46,11 @@ grep -qx "CADDY_HOST_MATCHERS=localhost 127.0.0.1 localhost:8080 127.0.0.1:8080"
 grep -qx "CADDY_API_PATH=/dev-api" "$tmp" || fail "CADDY_API_PATH must default to /dev-api"
 grep -qx "API_PUBLIC_URL=http://localhost:8080/dev-api" "$tmp" || fail "API_PUBLIC_URL must be origin + CADDY_API_PATH"
 grep -qx "HUB_PUBLIC_URL=http://localhost:8080" "$tmp" || fail "HUB_PUBLIC_URL must follow the published origin"
+grep -qx "GOOGLE_CLIENT_ID=" "$tmp" || fail "init must write an empty Google client id"
+grep -qx "GOOGLE_CLIENT_SECRET=" "$tmp" || fail "init must write an empty Google client secret"
+grep -qx "RESEND_API_KEY=" "$tmp" || fail "init must write an empty Resend key"
+grep -qx "EMAIL_FROM=" "$tmp" || fail "init must write an empty email from"
+grep -q '^AUTH_ENABLED=' "$tmp" && fail "init must not write an auth flag"
 
 kept="$(mktemp)"
 trap 'rm -f "$tmp" "$kept"' EXIT
