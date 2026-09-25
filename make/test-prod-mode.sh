@@ -24,22 +24,21 @@ fi
 if grep -q 'yarn dev' "$ROOT/stack/hub/docker-compose.yml"; then
   fail "hub production compose must not run yarn dev"
 fi
-if grep -E '^[[:space:]]*-[[:space:]]*backend[[:space:]]*$' "$ROOT/stack/hub/docker-compose.yml"; then
-  fail "hub must not join backend"
-fi
-if grep -E '^[[:space:]]*backend:' "$ROOT/stack/hub/docker-compose.yml"; then
-  fail "hub must not declare a backend network"
-fi
-if grep -q 'DATABASE_URL: ${HUB_DATABASE_URL}' "$ROOT/stack/hub/docker-compose.yml"; then
-  fail "hub must not take HUB_DATABASE_URL from shared"
-fi
-if grep -q 'REDIS_URL: ${REDIS_URL}' "$ROOT/stack/hub/docker-compose.yml"; then
-  fail "hub must not take REDIS_URL from shared"
-fi
+grep -q -- '- backend' "$ROOT/stack/hub/docker-compose.yml" \
+  || fail "hub must join backend for its PostgreSQL and Redis dependencies"
+grep -q 'DATABASE_URL: ${HUB_DATABASE_URL}' "$ROOT/stack/hub/docker-compose.yml" \
+  || fail "hub must receive its own database as DATABASE_URL"
+grep -q 'REDIS_URL: ${REDIS_URL}' "$ROOT/stack/hub/docker-compose.yml" \
+  || fail "hub must receive REDIS_URL"
+grep -q 'PAPERS_DATABASE_URL: ""' "$ROOT/stack/hub/docker-compose.yml" \
+  || fail "hub must not receive the papers database credential"
 grep -q 'URANTIA_DEV_API_INTERNAL_HOST: http://api:3000' "$ROOT/stack/hub/docker-compose.yml" \
   || fail "hub SSR must call the API on apps"
-grep -q 'command: \["yarn", "start"\]' "$ROOT/stack/hub/docker-compose.yml" \
-  || fail "hub compose must yarn start (image CMD migrate needs backend)"
+if grep -q 'command: \["yarn", "start"\]' "$ROOT/stack/hub/docker-compose.yml"; then
+  fail "hub compose must keep the image migration-first command"
+fi
+grep -q 'prisma migrate deploy.*exec yarn start' "$ROOT/hub/Dockerfile" \
+  || fail "hub image must migrate before Next.js startup"
 
 if grep -q 'apps:' "$ROOT/stack/db/postgres/docker-compose.yml"; then
   fail "postgres production compose must not join apps"
@@ -70,9 +69,9 @@ if grep -q 'bun run dev' "$ROOT/stack/api/docker-compose.yml"; then
   fail "api production compose must not run bun --hot / bun run dev"
 fi
 
-grep -q '`hub` joins `apps` only' "$ROOT/.agents/skills/stack-networks/SKILL.md" \
-  || fail "stack-networks skill must keep hub on apps"
+grep -q '`hub` joins both `apps` and `backend`' "$ROOT/.agents/skills/stack-networks/SKILL.md" \
+  || fail "stack-networks skill must record Hub dual-plane ownership"
 grep -q 'postgres` and `redis` join `backend` only' "$ROOT/.agents/skills/stack-networks/SKILL.md" \
   || fail "stack-networks skill must keep postgres and redis on backend"
 
-echo "prod-mode: hub and API production images, data-only binds, network planes"
+echo "prod-mode: Hub runtime dependencies, production images, data-only binds, network planes"
