@@ -89,7 +89,7 @@ if pid == 0:
     os.chdir(root)
     os.execv(str(script), [str(script)])
 
-answers = b"\n9090\n/v1\n\n"
+answers = b"\nn\n9090\n/v1\n\n"
 os.write(fd, answers)
 chunks = []
 while True:
@@ -200,7 +200,13 @@ while True:
 os.waitpid(pid, 0)
 re_out = b"".join(chunks).decode("utf-8", "replace")
 re_text = existed.read_text()
-for prompt in ("Published port", "Papers API path", "Published hostname", "Compose project name"):
+for prompt in (
+    "Published port",
+    "Papers API path",
+    "Published hostname",
+    "Compose project name",
+    "Configure sign-in providers",
+):
     if prompt in re_out:
         sys.stderr.write(re_out + "\n")
         sys.exit(f"re-init TTY must not ask {prompt} when the file already has it")
