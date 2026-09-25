@@ -15,8 +15,8 @@ services:
       - ${SHARED_ENV_FILE:-../../.env.shared}
     environment:
       NODE_ENV: production
-      DATABASE_URL: ""
-      REDIS_URL: ""
+      DATABASE_URL: ${HUB_DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
       HUB_DATABASE_URL: ""
       PAPERS_DATABASE_URL: ""
       URANTIA_DEV_API_INTERNAL_HOST: http://api:3000
@@ -29,12 +29,11 @@ services:
       NEXT_PUBLIC_AUTH_ENABLED: ${NEXT_PUBLIC_AUTH_ENABLED:-}
       PORT: "3001"
       HOSTNAME: "0.0.0.0"
-    # Apps only. Papers via API on apps. Do not join backend.
-    # Blank DATABASE_URL / REDIS_URL so .env.shared cannot leak backend DNS.
-    # yarn start: image CMD prisma migrate deploy needs postgres.
-    command: ["yarn", "start"]
+    # Browser and papers traffic use apps; Hub-owned PostgreSQL and Redis use backend.
+    # The image migrates the Hub database before starting Next.js.
     networks:
       - apps
+      - backend
     healthcheck:
       test: ["CMD-SHELL", "node -e \"fetch('http://127.0.0.1:3001').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\""]
       interval: 10s
@@ -45,4 +44,7 @@ services:
 networks:
   apps:
     name: ${COMPOSE_PROJECT_NAME:-urantialab}-apps
+    external: true
+  backend:
+    name: ${COMPOSE_PROJECT_NAME:-urantialab}-backend
     external: true

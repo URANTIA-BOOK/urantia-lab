@@ -51,9 +51,8 @@ grep -q -- '- backend' "$ROOT/stack/api/docker-compose.dev.yml" \
   || fail "api overlay networks: replaces the base list; keep backend"
 grep -q -- '- apps' "$ROOT/stack/hub/docker-compose.dev.yml" \
   || fail "hub overlay networks: replaces the base list; keep apps"
-if grep -E '^[[:space:]]*-[[:space:]]*backend[[:space:]]*$' "$ROOT/stack/hub/docker-compose.dev.yml"; then
-  fail "hub must not join backend"
-fi
+grep -q -- '- backend' "$ROOT/stack/hub/docker-compose.dev.yml" \
+  || fail "hub overlay networks: replaces the base list; keep backend"
 
 grep -q '^dev-up:' "$ROOT/Makefile" || fail "root Makefile must have make dev-up"
 grep -q '^dev-down:' "$ROOT/Makefile" || fail "root Makefile must have make dev-down"

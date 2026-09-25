@@ -28,8 +28,9 @@ A plain clone still works: `make init` runs `git submodule update --init --recur
 paper 1 is Foundation prose, not the English fallback.
 
 `make init` writes `.env.shared` once. The first TTY write asks for the host
-port (default `8080`), the papers API path (default `/dev-api`), and a
-hostname if you want to expose this copy. Later `make init` and `make up`
+port (default `8080`), the papers API path (default `/dev-api`), a hostname
+if you want to expose this copy, and optional Google/Resend sign-in credentials.
+Later `make init` and `make up`
 keep those values and restamp derived URLs onto `.env.shared` only.
 `make up` starts the stacks; it does not run the contract tests
 (`make validate` does). Change a stored key with a Make-time overwrite
@@ -80,11 +81,13 @@ is only for an in-turn edit; flip back to `make up` (prod) before you
 finish. `make postgres-up MODE=dev` is the same overlay door for one stack.
 Postgres and Redis stay on `backend`. The overlay adds diagnostic
 `ports:` and attaches `dev` (`${COMPOSE_PROJECT_NAME}-dev`) so Docker
-can publish; it does not join `apps`. Hub stays on `apps` and reaches
-papers through the API. Every `docker-compose.dev.yml` declares and
+can publish; it does not join `apps`. Hub joins `apps` for papers and edge
+traffic and `backend` for its own Prisma data and Redis cache. Its production
+image migrates the Hub database before Next.js starts. Every
+`docker-compose.dev.yml` declares and
 attaches that `dev` network.
 After replacing postgres, recreate the papers adapter (`make api-up`)
-so TCP clients reconnect. The map (Wealth Dash→hub, Hasura→api) is
+and the Hub (`make hub-up`) so both TCP clients reconnect. The map is
 `.agents/skills/stack-networks/SKILL.md`.
 
 ```bash
