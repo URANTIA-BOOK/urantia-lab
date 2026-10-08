@@ -46,6 +46,18 @@ grep -qx "CADDY_HOST_MATCHERS=localhost 127.0.0.1 localhost:8080 127.0.0.1:8080"
 grep -qx "CADDY_API_PATH=/dev-api" "$tmp" || fail "CADDY_API_PATH must default to /dev-api"
 grep -qx "API_PUBLIC_URL=http://localhost:8080/dev-api" "$tmp" || fail "API_PUBLIC_URL must be origin + CADDY_API_PATH"
 grep -qx "HUB_PUBLIC_URL=http://localhost:8080" "$tmp" || fail "HUB_PUBLIC_URL must follow the published origin"
+grep -qx "GOOGLE_CLIENT_ID=" "$tmp" || fail "init must own an empty Google client id"
+grep -qx "GOOGLE_CLIENT_SECRET=" "$tmp" || fail "init must own an empty Google client secret"
+grep -qx "RESEND_API_KEY=" "$tmp" || fail "init must own an empty Resend key"
+grep -qx "EMAIL_FROM=" "$tmp" || fail "init must own an empty email sender"
+
+GOOGLE_CLIENT_ID=google-id GOOGLE_CLIENT_SECRET=google-secret \
+  RESEND_API_KEY=resend-key EMAIL_FROM=reader@example.test \
+  SHARED_ENV_FILE="$tmp" "$ROOT/make/init-env.sh" >/dev/null
+grep -qx "GOOGLE_CLIENT_ID=google-id" "$tmp" || fail "env Google id must win"
+grep -qx "GOOGLE_CLIENT_SECRET=google-secret" "$tmp" || fail "env Google secret must win"
+grep -qx "RESEND_API_KEY=resend-key" "$tmp" || fail "env Resend key must win"
+grep -qx "EMAIL_FROM=reader@example.test" "$tmp" || fail "env email sender must win"
 
 kept="$(mktemp)"
 trap 'rm -f "$tmp" "$kept"' EXIT

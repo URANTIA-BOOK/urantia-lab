@@ -10,18 +10,18 @@
 - Lab default is `MODE=prod` (`next start` / `bun start`, Caddy only).
   `MODE=dev` is the overlay door (`make dev-up` / `make postgres-up MODE=dev`):
   hot-reload plus diagnostic host ports from `docker-compose.dev.yml`.
-  Postgres and Redis stay on `backend` only (Wealth overlay adds `ports:`
-  and attaches `dev`, not `apps`). Hub stays on `apps` only and talks to
-  the API there. Every `docker-compose.dev.yml` declares `dev`
+  Postgres and Redis stay on `backend` only (the overlay adds `ports:`
+  and attaches `dev`, not `apps`). Hub joins `apps` for the API and edge,
+  plus `backend` for its own Prisma database and Redis cache. Every
+  `docker-compose.dev.yml` declares `dev`
   (`${COMPOSE_PROJECT_NAME}-dev`) and attaches its service so host ports
   can bind.
-  Dual membership is the adapter (API today; an HTTP Redis bridge if hub
-  needs Redis). After replacing postgres, recreate the papers adapter
-  (`make api-up`) so TCP clients reconnect. Close every turn on prod so
+  Dual membership belongs to services that genuinely translate or own both
+  planes: API for papers and Hub for its server-side persistence. After
+  replacing postgres, recreate API and Hub so TCP clients reconnect. Close every turn on prod so
   the Cloudflare origin matches staging (`.cursor/rules/staging-prod-mode.mdc`).
   Network contract: `.agents/skills/stack-networks/SKILL.md`.
-  Inner-join map (Wealth Dash→hub, Hasura→api, postgres/redis stay,
-  redis-http not this train) lives in that skill.
+  The current membership map lives in that skill.
   Do not import Wealth's Hasura, Auth0, or Portainer.
   The narrow exception is a Caddy path-prefix edge (`stack/edge`) so one
   Cloudflare published route (`localhost:8080`) can reach the hub and the API.
@@ -75,10 +75,10 @@ When the user does ask, open only the paper or file they named. Do not walk sibl
 - Each directory under `stack/` owns its Compose and Makefile.
   `make/compose.mk` is shared Compose behavior only.
 - Network membership is responsibility. Postgres and Redis stay on
-  `backend`. Hub and Caddy stay on `apps`. API joins both (papers
-  adapter). Do not join a base service to `apps` to publish a diagnostic
-  port; attach `dev` on the overlay. Do not join hub to `backend` to
-  reach Postgres or Redis.
+  `backend`; Caddy stays on `apps`; API and Hub join both. API adapts papers,
+  while Hub owns Prisma user data and Redis-backed features. Do not join a
+  base service to `apps` merely to publish a diagnostic port; attach `dev` on
+  the overlay.
   Browser traffic uses `NEXT_PUBLIC_URANTIA_DEV_API_HOST` on the published
   edge; hub SSR uses `URANTIA_DEV_API_INTERNAL_HOST=http://api:3000`.
 - `make verify` is the machine probe. `make review` is the human language
